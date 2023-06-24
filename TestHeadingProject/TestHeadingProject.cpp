@@ -10,6 +10,29 @@
 #pragma comment(lib, "ws2_32.lib")
 #include <Windows.h>
 
+// 나중에 DLL화 하면 공통헤더로 해결할 패킷 데이터
+#pragma pack(push, 1)
+struct Header
+{
+	unsigned long long type = 0;
+	unsigned long long length = 0;
+};
+
+template<uint64_t _type, uint64_t _buffersize>
+struct SendStruct : public Header
+{
+	char buffer[ _buffersize ];
+
+	SendStruct()
+	{
+		type = _type;
+		length = _buffersize;
+	}
+};
+
+typedef SendStruct<1, 43> TestBuffer;
+#pragma pack(pop)
+
 uint64_t m_resultsize = 0;
 char Buffer[ 1 << 13 ];
 char RecvBuffer[ 1 << 13 ];
@@ -24,6 +47,57 @@ void WriteResultBuffer( char* _buffer, unsigned long long _length )
 	memcpy_s( destPtr, length, _buffer, _length );
 
 	m_resultsize += _length;
+}
+
+// 지금은 받는 패킷이 하나니까 더 복잡하게 처리 안할 예정.
+void ParseHeader( char* _buffer, Header& _parse )
+{
+	memcpy( &_parse, _buffer, sizeof( Header ) );
+
+	printf( "Header Pasing Result = [type : %lld][length : %lld] \n", _parse.type, _parse.length );
+}
+
+void ParseData(char* _buffer, TestBuffer& _parse )
+{
+	memcpy( &_parse, _buffer, sizeof( TestBuffer ) );
+
+	printf( "TestBuffer Pasing Result = [type : %lld][length : %lld][buffer : %lls] \n", _parse.type, _parse.length, _parse.buffer );
+}
+
+void ReadData( char* _buffer, unsigned long long _totalrecvSize )
+{
+	unsigned long long leftSize = _totalrecvSize;
+
+	unsigned long long seek = 0;
+
+	while( 0 != leftSize && 64 > leftSize )
+	{
+		char* currPtr = _buffer + seek;
+		Header getHeader = {};
+		unsigned long long type = 0;
+		unsigned long long packlength = 0;
+		ParseHeader( currPtr, getHeader );
+
+		switch( getHeader.type )
+		{
+			case 1:
+			{
+				TestBuffer parseData = {};
+
+				ParseData( currPtr, parseData );
+
+				printf( parseData.buffer );
+			}
+				break;
+			default:
+				printf("!!! Packet Parsing Failure !!! \n");
+				break;
+		}
+
+		packlength = ( getHeader.length + sizeof( Header ) );
+		seek = seek + packlength;
+		leftSize = leftSize - packlength;
+	}
 }
 
 int main()
@@ -195,20 +269,8 @@ int main()
 		printf( "Debug Packetptr [%llX] \n", recvBufLengPtr );
 		printf( "Debug Packetlength [%lld][%llX] \n", BufferLength, BufferLength );
 		printf( "Debug PacketSize [%lld][%llX] \n", m_currentpacketSize, m_currentpacketSize );
-		if( m_currentpacketSize == m_totalRecv )
-		{
-			WriteResultBuffer( RecvBuffer + reserveSize + 16, BufferLength );
-			m_totalRecv = 0;
-		}
-		else if( m_currentpacketSize < m_totalRecv )
-		{
-			WriteResultBuffer( RecvBuffer + reserveSize + 16, BufferLength );
 
-			unsigned long long ReserveSize = m_totalRecv - m_currentpacketSize;
-			memcpy( RecvBuffer + reserveSize, RecvBuffer + m_currentpacketSize, ReserveSize );
-
-			m_totalRecv = m_totalRecv - m_currentpacketSize;
-		}
+		ReadData( RecvBuffer + reserveSize, receiveSize );
 
 		if( 0 != m_resultsize )
 		{
