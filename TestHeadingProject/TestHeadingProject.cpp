@@ -30,11 +30,14 @@ struct SendStruct : public Header
 	}
 };
 
-typedef SendStruct<1, 43> TestBuffer;
+typedef SendStruct<1, 0> SessionKey;
+typedef SendStruct<2, 0> Shutdown;
+typedef SendStruct<100, 43> TestBuffer;
 #pragma pack(pop)
 
 uint64_t m_resultsize = 0;
 char RecvBuffer[ 1 << 13 ];
+bool IsNeedReconnectWait = false;
 
 void PrintMem(char* _ptr, uint64_t _length)
 {
@@ -72,7 +75,7 @@ void ProcessTime( time_t& _start, uint64_t& count, time_t now = time(NULL) )
 	printf( "[%lld][count : %lld][MPS : %lld] ", Time, count, MPS );
 }
 
-uint64_t ReadData( char* _buffer, uint64_t _totalrecvSize, uint64_t& _counter )
+uint64_t ReadData( char* _buffer, uint64_t& _totalrecvSize, uint64_t& _counter )
 {
 	uint64_t processSize = 0;
 	uint64_t seek = 0;
@@ -90,7 +93,10 @@ uint64_t ReadData( char* _buffer, uint64_t _totalrecvSize, uint64_t& _counter )
 
 		switch( getHeader.type )
 		{
-			case 1:
+			case 2:
+				IsNeedReconnectWait = true;
+				break;
+			case 100:
 			{
 				if( _totalrecvSize < sizeof( TestBuffer ) )
 					return processSize;
@@ -98,9 +104,8 @@ uint64_t ReadData( char* _buffer, uint64_t _totalrecvSize, uint64_t& _counter )
 
 				ParseData( currPtr, parseData );
 				packlength = sizeof( TestBuffer );
-				processSize += packlength;
-				printf( parseData.buffer );
-				printf( "\n" );
+				//printf( parseData.buffer );
+				//printf( "\n" );
 			}
 				break;
 			default:
@@ -108,8 +113,9 @@ uint64_t ReadData( char* _buffer, uint64_t _totalrecvSize, uint64_t& _counter )
 				return processSize;
 		}
 
-		seek = seek + packlength;
-		_totalrecvSize = _totalrecvSize - packlength;
+		processSize += getHeader.length;
+		seek += getHeader.length;
+		_totalrecvSize -= getHeader.length;
 
 		++_counter;
 	}
@@ -117,7 +123,7 @@ uint64_t ReadData( char* _buffer, uint64_t _totalrecvSize, uint64_t& _counter )
 	return processSize;
 }
 
-uint64_t ProcessPacket( char* _buffer, uint64_t _bufferSize, uint64_t& _counter, uint64_t& _reserveSize, DWORD& _receiveSize, time_t _start )
+uint64_t ProcessPacket( char* _buffer, uint64_t& _bufferSize, uint64_t& _counter, uint64_t& _reserveSize, DWORD& _receiveSize, time_t _start )
 {
 	// 일단 상수로 먼저 짭니다.
 	// 어차피 Sync는 테스트 용도에 가까우므로 이 이후에 제대로 작성해야합니다.
@@ -236,6 +242,7 @@ int WaitClient( SOCKET& _listenSock, SOCKET& _session )
 
 	// No longer need server socket
 	closesocket( _listenSock );
+	_listenSock = INVALID_SOCKET;
 	return 0;
 }
 
@@ -289,20 +296,31 @@ int main()
 		}
 
 		receiveSize = recv( sessionOpen, RecvBuffer + m_bufferSize, reserveSize, 0 );
-		if( -1 == receiveSize )
+		if( SOCKET_ERROR == receiveSize || IsNeedReconnectWait )
 		{
 			int sockerror = WSAGetLastError();
 			int winerror = GetLastError();
-			// 에러 복구가 안되니 무한이 아니라 나가기
-			closesocket(sessionOpen);
+
+			closesocket( sessionOpen );
 			sessionOpen = INVALID_SOCKET;
-			WSACleanup();
-			return 1;
+
+			// 에러 복구가 안되니 무한이 아니라 나가기
+			if( 0 != ConnectInfoCreate( service, m_info ) )
+				return 1;
+
+			if( 0 != CreateSocket( m_socket, m_info, service ) )
+				return 1;
+
+			freeaddrinfo( m_info );
+
+			if( 0 != WaitClient( m_socket, sessionOpen ) )
+				return 1;
+
+			IsNeedReconnectWait = false;
+			continue;
 		}
 
 		uint64_t ProcessLength = ProcessPacket( RecvBuffer, m_bufferSize, counter0, reserveSize, receiveSize, start );
-
-		printf("[Process Size : %lld][m_bufferSize : %lld] \n", ProcessLength, m_bufferSize );
 
 		if( 0 != ProcessLength )
 		{
@@ -311,6 +329,8 @@ int main()
 				memcpy( RecvBuffer, RecvBuffer + ProcessLength, m_bufferSize );
 			}
 		}
+
+		printf( "[Process Size : %lld][m_bufferSize : %lld] \n", ProcessLength, m_bufferSize );
 	}
 
 	//================================================================================================================================================================
