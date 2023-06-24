@@ -175,8 +175,9 @@ int main()
 			unsigned long long Time = now - start;
 			unsigned long long Timedevide = ( 0 == Time ? 1 : Time );
 			unsigned long long MPS = counter0 / Timedevide;
-			//printf( "[reserveSize : %lld][receiveSize : %lld][m_totalRecv : %lld] \n", reserveSize, receiveSize, m_totalRecv );
+			printf( "[reserveSize : %lld][receiveSize : %lld][m_totalRecv : %lld] \n", reserveSize, receiveSize, m_totalRecv );
 			printf( "[%lld][count : %lld][MPS : %lld]TestBuffer[%s] \n", Time, counter0, MPS, RecvBuffer + reserveSize + 16 );
+			printf( "Debug BufferInfo [%s] \n", RecvBuffer );
 			++counter0;
 		}
 
@@ -184,29 +185,31 @@ int main()
 		// 일단 상수로 먼저 짭니다.
 		// 어차피 Sync는 테스트 용도에 가까우므로 이 이후에 제대로 작성해야합니다.
 		m_totalRecv += receiveSize;
-
-		if( 16 < m_totalRecv )
+		unsigned long long* recvBufLengPtr = ( unsigned long long* )( RecvBuffer + reserveSize + 8 );
+		unsigned long long BufferLength = *recvBufLengPtr;
+		m_currentpacketSize = 16 + BufferLength;
+		printf( "Debug MessagePtr [%llX] \n", RecvBuffer + reserveSize + 16 );
+		printf( "Debug Packetptr [%llX] \n", recvBufLengPtr );
+		printf( "Debug Packetlength [%lld][%llX] \n", BufferLength, BufferLength );
+		printf( "Debug PacketSize [%lld][%llX] \n", m_currentpacketSize, m_currentpacketSize );
+		if( m_currentpacketSize == m_totalRecv )
 		{
-			m_currentpacketSize = 16 + *( ( unsigned long long* )( RecvBuffer + 8 ) );
-			if( m_currentpacketSize == m_totalRecv )
-			{
-				WriteResultBuffer( RecvBuffer, m_currentpacketSize );
-			#if _DEBUG
-				ZeroMemory( RecvBuffer, sizeof( RecvBuffer ) );
-			#endif
-				m_totalRecv = 0;
-			}
-			else if( m_currentpacketSize < m_totalRecv )
-			{
-				WriteResultBuffer( RecvBuffer, m_currentpacketSize );
+			WriteResultBuffer( RecvBuffer, m_currentpacketSize );
+		#if _DEBUG
+			ZeroMemory( RecvBuffer, sizeof( RecvBuffer ) );
+		#endif
+			m_totalRecv = 0;
+		}
+		else if( m_currentpacketSize < m_totalRecv )
+		{
+			WriteResultBuffer( RecvBuffer + reserveSize + 16, m_currentpacketSize );
 
-				unsigned long long ReserveSize = m_totalRecv - m_currentpacketSize;
-				memcpy( RecvBuffer, RecvBuffer + m_currentpacketSize, ReserveSize );
+			unsigned long long ReserveSize = m_totalRecv - m_currentpacketSize;
+			memcpy( RecvBuffer, RecvBuffer + m_currentpacketSize, ReserveSize );
 
-				//ZeroMemory( RecvBuffer + ReserveSize, sizeof( RecvBuffer ) - ReserveSize );
+			//ZeroMemory( RecvBuffer + ReserveSize, sizeof( RecvBuffer ) - ReserveSize );
 
-				m_totalRecv = m_totalRecv - m_currentpacketSize;
-			}
+			m_totalRecv = m_totalRecv - m_currentpacketSize;
 		}
 
 		if( 0 != m_resultsize )
