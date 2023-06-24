@@ -37,6 +37,15 @@ uint64_t m_resultsize = 0;
 char Buffer[ 1 << 13 ];
 char RecvBuffer[ 1 << 13 ];
 
+void PrintMem(char* _ptr, uint64_t _length)
+{
+	for( uint64_t seek = 0; _length > seek; ++seek )
+	{
+		printf( "%02X", _ptr[ seek ] );
+	}
+	printf( "\n" );
+}
+
 void WriteResultBuffer( char* _buffer, uint64_t _length )
 {
 	printf("[Input debug buffer : %s][debug ptr : %llX] \n", _buffer, _buffer );
@@ -73,24 +82,18 @@ void ProcessTime( time_t& _start, uint64_t& count, time_t now = time(NULL) )
 	uint64_t Time = now - _start;
 	uint64_t Timedevide = ( 0 == Time ? 1 : Time );
 	uint64_t MPS = count / Timedevide;
-	printf( "[%lld][count : %lld][MPS : %lld] \n", Time, count, MPS );
+	printf( "[%lld][count : %lld][MPS : %lld] ", Time, count, MPS );
 }
 
-void ProcessPacket()
+uint64_t ReadData( char* _buffer, uint64_t _totalrecvSize, uint64_t& _counter )
 {
-
-}
-
-void ReadData( char* _buffer, uint64_t _totalrecvSize, uint64_t& _counter )
-{
-	uint64_t leftSize = _totalrecvSize;
-
+	uint64_t processSize = 0;
 	uint64_t seek = 0;
 
-	while( 0 != leftSize )
+	while( 0 != _totalrecvSize )
 	{
-		if( leftSize < sizeof( Header ) )
-			return;
+		if( _totalrecvSize < sizeof( Header ) )
+			return processSize;
 
 		char* currPtr = _buffer + seek;
 		Header getHeader = {};
@@ -102,26 +105,150 @@ void ReadData( char* _buffer, uint64_t _totalrecvSize, uint64_t& _counter )
 		{
 			case 1:
 			{
-				if( leftSize < sizeof( TestBuffer ) )
-					return;
+				if( _totalrecvSize < sizeof( TestBuffer ) )
+					return processSize;
 				TestBuffer parseData = {};
 
 				ParseData( currPtr, parseData );
 				packlength = sizeof( TestBuffer );
-
-				//printf( parseData.buffer );
+				processSize += packlength;
+				printf( parseData.buffer );
 			}
 				break;
 			default:
 				printf("!!! Packet Parsing Failure !!! \n");
-				return;
+				return processSize;
 		}
 
 		seek = seek + packlength;
-		leftSize = leftSize - packlength;
+		_totalrecvSize = _totalrecvSize - packlength;
 
 		++_counter;
 	}
+
+	return processSize;
+}
+
+uint64_t ProcessPacket( char* _buffer, uint64_t _totalrecvSize, uint64_t& _counter, uint64_t& _reserveSize, DWORD& _receiveSize, time_t _start )
+{
+	// 일단 상수로 먼저 짭니다.
+	// 어차피 Sync는 테스트 용도에 가까우므로 이 이후에 제대로 작성해야합니다.
+	_totalrecvSize += _receiveSize;
+	ProcessTime( _start, _counter );
+	printf( "[reserveSize : %lld][receiveSize : %lld][m_totalRecv : %lld]TestBuffer[% s] \n", _reserveSize, _receiveSize, _totalrecvSize, _buffer + _reserveSize + 16 );
+	//++counter0;
+
+
+	if( _totalrecvSize < sizeof( Header ) )
+	{
+		return 0;
+	}
+	uint64_t* recvBufLengPtr = ( uint64_t* )( _buffer + _reserveSize + 8 );
+	uint64_t BufferLength = *recvBufLengPtr;
+
+	return ReadData( _buffer, _totalrecvSize, _counter );
+}
+
+int ConnectInfoCreate( sockaddr_in& _result, addrinfo*& m_info )
+{
+	addrinfo createData = {};
+
+	SecureZeroMemory( ( PVOID )&createData, sizeof( addrinfo ) );
+
+	createData.ai_family = AF_INET;
+	createData.ai_socktype = SOCK_STREAM;
+	createData.ai_protocol = IPPROTO_TCP;
+	createData.ai_flags = AI_PASSIVE;
+
+	int result = getaddrinfo( nullptr, "50000", &createData, &m_info );
+	if( S_OK != result )
+	{
+		// 초기화 실패
+		int sockerror = WSAGetLastError();
+		int winerror = GetLastError();
+		// exception 객체 생성되면 throw하면서 에러 정보 송신
+		return 1;
+	}
+	sockaddr_storage storage;
+	memset( &storage, 0, sizeof storage );
+	// The socket address to be passed to bind
+	_result.sin_family = AF_INET;
+	_result.sin_addr.s_addr = htonl( INADDR_ANY );
+	_result.sin_port = htons( 50000 );
+
+	return 0;
+}
+
+int CreateSocket(SOCKET& _listenSock, addrinfo* _info, sockaddr_in& _service )
+{
+	int result = 0;
+	int loopCounter = 0;
+	do
+	{
+		if( 5 < loopCounter )
+		{
+			int winerror = GetLastError();
+
+			if( INVALID_SOCKET != _listenSock )
+			{
+				closesocket( _listenSock );
+				_listenSock = INVALID_SOCKET;
+			}
+			// exception 객체 생성되면 throw하면서 에러 정보 송신
+			return 1;
+		}
+
+		_listenSock = socket( _info->ai_family, _info->ai_socktype, _info->ai_protocol );
+		if( INVALID_SOCKET == _listenSock )
+		{
+			continue;
+		}
+
+		result = bind( _listenSock, ( SOCKADDR* )&_service, sizeof( _service ) );
+		if( result == SOCKET_ERROR )
+		{
+			int err = 0;
+			if( WSAECONNREFUSED == ( err = WSAGetLastError() ) )
+			{
+				closesocket( _listenSock );
+				_listenSock = INVALID_SOCKET;
+				continue;
+			}
+			wprintf( L"connect failed with error: %d\n", err );
+			freeaddrinfo( _info );
+			closesocket( _listenSock );
+			return 1;
+		}
+	}
+	while( S_OK != result );
+
+	return 0;
+}
+
+int WaitClient( SOCKET& _listenSock, SOCKET& _session )
+{
+	int result = listen( _listenSock, SOMAXCONN );
+	if( result == SOCKET_ERROR )
+	{
+		printf( "listen failed with error: %d\n", WSAGetLastError() );
+		closesocket( _listenSock );
+		WSACleanup();
+		return 1;
+	}
+
+	_session = accept( _listenSock, NULL, NULL );
+	if( _session == INVALID_SOCKET )
+	{
+		printf( "accept failed with error: %d\n", WSAGetLastError() );
+		closesocket( _listenSock );
+		WSACleanup();
+		return 1;
+	}
+
+
+	// No longer need server socket
+	closesocket( _listenSock );
+	return 0;
 }
 
 int main()
@@ -145,98 +272,21 @@ int main()
 		return 1;
 	}
 
-	addrinfo createData = {};
-
-	SecureZeroMemory( ( PVOID )&createData, sizeof( addrinfo ) );
-
-	createData.ai_family = AF_INET;
-	createData.ai_socktype = SOCK_STREAM;
-	createData.ai_protocol = IPPROTO_TCP;
-	createData.ai_flags = AI_PASSIVE;
-
-	result = getaddrinfo( nullptr, "50000", &createData, &m_info );
-	if( S_OK != result )
-	{
-		// 초기화 실패
-		int sockerror = WSAGetLastError();
-		int winerror = GetLastError();
-		// exception 객체 생성되면 throw하면서 에러 정보 송신
-		return 1;
-	}
-	sockaddr_storage storage;
-	memset( &storage, 0, sizeof storage );
-	// The socket address to be passed to bind
 	sockaddr_in service;
-	service.sin_family = AF_INET;
-	service.sin_addr.s_addr = htonl( INADDR_ANY );
-	service.sin_port = htons( 50000 );
+	if( 0 != ConnectInfoCreate( service, m_info ) )
+		return 1;
 
-
-	int loopCounter = 0;
-	do
-	{
-		if( 5 < loopCounter )
-		{
-			int winerror = GetLastError();
-
-			if( INVALID_SOCKET != m_socket )
-			{
-				closesocket( m_socket );
-				m_socket = INVALID_SOCKET;
-			}
-			// exception 객체 생성되면 throw하면서 에러 정보 송신
-			return 1;
-		}
-
-		m_socket = socket( m_info->ai_family, m_info->ai_socktype, m_info->ai_protocol );
-		if( INVALID_SOCKET == m_socket )
-		{
-			continue;
-		}
-
-		result = bind( m_socket, ( SOCKADDR* )&service, sizeof( service ) );
-		if( result == SOCKET_ERROR )
-		{
-			int err = 0;
-			if( WSAECONNREFUSED == ( err = WSAGetLastError() ) )
-			{
-				closesocket( m_socket );
-				m_socket = INVALID_SOCKET;
-				continue;
-			}
-			wprintf( L"connect failed with error: %d\n", err );
-			freeaddrinfo( m_info );
-			closesocket( m_socket );
-			return 1;
-		}
-	}
-	while( S_OK != result );
+	if( 0 != CreateSocket( m_socket, m_info, service ) )
+		return 1;
 
 	DWORD receiveSize = 0;
 
 	freeaddrinfo( m_info );
 
-	result = listen( m_socket, SOMAXCONN );
-	if( result == SOCKET_ERROR )
-	{
-		printf( "listen failed with error: %d\n", WSAGetLastError() );
-		closesocket( m_socket );
-		WSACleanup();
-		return 1;
-	}
-
 	SOCKET sessionOpen = INVALID_SOCKET;
-	sessionOpen = accept( m_socket, NULL, NULL );
-	if( sessionOpen == INVALID_SOCKET )
-	{
-		printf( "accept failed with error: %d\n", WSAGetLastError() );
-		closesocket( m_socket );
-		WSACleanup();
+	
+	if( 0 != WaitClient( m_socket, sessionOpen ) )
 		return 1;
-	}
-
-	// No longer need server socket
-	closesocket( m_socket );
 
 	uint64_t counter0 = 0;
 	time_t start = time(NULL);
@@ -248,44 +298,23 @@ int main()
 		{
 			int sockerror = WSAGetLastError();
 			int winerror = GetLastError();
-			// 에러복구
-			continue;
+			// 에러 복구가 안되니 무한이 아니라 나가기
+			closesocket(sessionOpen);
+			WSACleanup();
+			return 1;
 		}
 
+		uint64_t ProcessLength = ProcessPacket( RecvBuffer, m_totalRecv, counter0, reserveSize, receiveSize, start );
 
+		printf("[Process Size : %lld][m_totalRecv : %lld]", ProcessLength, m_totalRecv );
+
+		if( 0 != ProcessLength )
 		{
-			time_t now = time( NULL );
-			if( UINT64_MAX == counter0 )
+			if( 0 != m_totalRecv )
 			{
-				counter0 = 0;
+				memcpy( RecvBuffer, RecvBuffer + ProcessLength, m_totalRecv );
 			}
-			uint64_t Time = now - start;
-			uint64_t Timedevide = ( 0 == Time ? 1 : Time );
-			uint64_t MPS = counter0 / Timedevide;
-
-			ProcessTime( start, counter0);
-			printf( "[reserveSize : %lld][receiveSize : %lld][m_totalRecv : %lld]TestBuffer[% s] \n", reserveSize, receiveSize, m_totalRecv, RecvBuffer + reserveSize + 16 );
-			//++counter0;
 		}
-
-
-		// 일단 상수로 먼저 짭니다.
-		// 어차피 Sync는 테스트 용도에 가까우므로 이 이후에 제대로 작성해야합니다.
-		m_totalRecv += receiveSize;
-		printf("totalRecv : %lld \n", m_totalRecv);
-		if( m_totalRecv < sizeof( Header ) )
-		{
-			continue;
-		}
-		uint64_t* recvBufLengPtr = ( uint64_t* )( RecvBuffer + reserveSize + 8 );
-		uint64_t BufferLength = *recvBufLengPtr;
-		m_currentpacketSize = 16 + BufferLength;
-		//printf( "Debug MessagePtr [%llX] \n", RecvBuffer + reserveSize + 16 );
-		//printf( "Debug Packetptr [%llX] \n", recvBufLengPtr );
-		//printf( "Debug Packetlength [%lld][%llX] \n", BufferLength, BufferLength );
-		//printf( "Debug PacketSize [%lld][%llX] \n", m_currentpacketSize, m_currentpacketSize );
-
-		ReadData( RecvBuffer + reserveSize, m_totalRecv, counter0 );
 	}
 
 	//================================================================================================================================================================
