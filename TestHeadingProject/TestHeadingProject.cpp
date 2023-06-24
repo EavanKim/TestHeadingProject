@@ -14,8 +14,8 @@
 #pragma pack(push, 1)
 struct Header
 {
-	unsigned long long type = 0;
-	unsigned long long length = 0;
+	uint64_t type = 0;
+	uint64_t length = 0;
 };
 
 template<uint64_t _type, uint64_t _buffersize>
@@ -37,13 +37,13 @@ uint64_t m_resultsize = 0;
 char Buffer[ 1 << 13 ];
 char RecvBuffer[ 1 << 13 ];
 
-void WriteResultBuffer( char* _buffer, unsigned long long _length )
+void WriteResultBuffer( char* _buffer, uint64_t _length )
 {
 	printf("[Input debug buffer : %s][debug ptr : %llX] \n", _buffer, _buffer );
 	printf("[Input debug length : %lld] \n", _length );
 
 	char* destPtr = ( char* )( Buffer + m_resultsize );
-	unsigned long long length = ( unsigned long long )( 1 << 13 ) - m_resultsize;
+	uint64_t length = ( uint64_t )( 1 << 13 ) - m_resultsize;
 	memcpy_s( destPtr, length, _buffer, _length );
 
 	m_resultsize += _length;
@@ -54,21 +54,38 @@ void ParseHeader( char* _buffer, Header& _parse )
 {
 	memcpy( &_parse, _buffer, sizeof( Header ) );
 
-	printf( "Header Pasing Result = [type : %lld][length : %lld] \n", _parse.type, _parse.length );
+	//printf( "Header Pasing Result = [type : %lld][length : %lld] \n", _parse.type, _parse.length );
 }
 
 void ParseData(char* _buffer, TestBuffer& _parse )
 {
 	memcpy( &_parse, _buffer, sizeof( TestBuffer ) );
 
-	printf( "TestBuffer Pasing Result = [type : %lld][length : %lld][buffer : %lls] \n", _parse.type, _parse.length, _parse.buffer );
+	//printf( "TestBuffer Pasing Result = [type : %lld][length : %lld][buffer : %lls] \n", _parse.type, _parse.length, _parse.buffer );
 }
 
-void ReadData( char* _buffer, unsigned long long _totalrecvSize, unsigned long long& _counter )
+void ProcessTime( time_t& _start, uint64_t& count, time_t now = time(NULL) )
 {
-	unsigned long long leftSize = _totalrecvSize;
+	if( UINT64_MAX == count )
+	{
+		count = 0;
+	}
+	uint64_t Time = now - _start;
+	uint64_t Timedevide = ( 0 == Time ? 1 : Time );
+	uint64_t MPS = count / Timedevide;
+	printf( "[%lld][count : %lld][MPS : %lld] \n", Time, count, MPS );
+}
 
-	unsigned long long seek = 0;
+void ProcessPacket()
+{
+
+}
+
+void ReadData( char* _buffer, uint64_t _totalrecvSize, uint64_t& _counter )
+{
+	uint64_t leftSize = _totalrecvSize;
+
+	uint64_t seek = 0;
 
 	while( 0 != leftSize )
 	{
@@ -77,8 +94,8 @@ void ReadData( char* _buffer, unsigned long long _totalrecvSize, unsigned long l
 
 		char* currPtr = _buffer + seek;
 		Header getHeader = {};
-		unsigned long long type = 0;
-		unsigned long long packlength = 0;
+		uint64_t type = 0;
+		uint64_t packlength = 0;
 		ParseHeader( currPtr, getHeader );
 
 		switch( getHeader.type )
@@ -92,7 +109,7 @@ void ReadData( char* _buffer, unsigned long long _totalrecvSize, unsigned long l
 				ParseData( currPtr, parseData );
 				packlength = sizeof( TestBuffer );
 
-				printf( parseData.buffer );
+				//printf( parseData.buffer );
 			}
 				break;
 			default:
@@ -225,43 +242,29 @@ int main()
 	time_t start = time(NULL);
 	while( 1 )
 	{
-		unsigned long long reserveSize = ( ( unsigned long long )( 1 << 13 ) - m_totalRecv );
-		if( 64 > reserveSize )
-		{
-			m_totalRecv = 0;
-		}
-		receiveSize = recv( sessionOpen, RecvBuffer + reserveSize, reserveSize, 0 );
-		if( 0 == receiveSize )
-		{
-			if( 0 != m_resultsize )
-			{
-				time_t now = time( NULL );
-				printf( "[%lld]Result[%s] \n", now - start, Buffer );
-
-				//ZeroMemory( Buffer, sizeof( Buffer ) );
-				m_resultsize = 0;
-			}
-			continue;
-		}
-		else if( -1 == receiveSize )
+		uint64_t reserveSize = ( ( uint64_t )( 1 << 13 ) - m_totalRecv );
+		receiveSize = recv( sessionOpen, RecvBuffer + m_totalRecv, reserveSize, 0 );
+		if( -1 == receiveSize )
 		{
 			int sockerror = WSAGetLastError();
 			int winerror = GetLastError();
 			// 에러복구
 			continue;
 		}
+
+
 		{
 			time_t now = time( NULL );
 			if( UINT64_MAX == counter0 )
 			{
 				counter0 = 0;
 			}
-			unsigned long long Time = now - start;
-			unsigned long long Timedevide = ( 0 == Time ? 1 : Time );
-			unsigned long long MPS = counter0 / Timedevide;
-			printf( "[reserveSize : %lld][receiveSize : %lld][m_totalRecv : %lld] \n", reserveSize, receiveSize, m_totalRecv );
-			printf( "[%lld][count : %lld][MPS : %lld]TestBuffer[%s] \n", Time, counter0, MPS, RecvBuffer + reserveSize + 16 );
-			printf( "Debug BufferInfo [%s] \n", RecvBuffer );
+			uint64_t Time = now - start;
+			uint64_t Timedevide = ( 0 == Time ? 1 : Time );
+			uint64_t MPS = counter0 / Timedevide;
+
+			ProcessTime( start, counter0);
+			printf( "[reserveSize : %lld][receiveSize : %lld][m_totalRecv : %lld]TestBuffer[% s] \n", reserveSize, receiveSize, m_totalRecv, RecvBuffer + reserveSize + 16 );
 			//++counter0;
 		}
 
@@ -269,23 +272,20 @@ int main()
 		// 일단 상수로 먼저 짭니다.
 		// 어차피 Sync는 테스트 용도에 가까우므로 이 이후에 제대로 작성해야합니다.
 		m_totalRecv += receiveSize;
-		unsigned long long* recvBufLengPtr = ( unsigned long long* )( RecvBuffer + reserveSize + 8 );
-		unsigned long long BufferLength = *recvBufLengPtr;
-		m_currentpacketSize = 16 + BufferLength;
-		printf( "Debug MessagePtr [%llX] \n", RecvBuffer + reserveSize + 16 );
-		printf( "Debug Packetptr [%llX] \n", recvBufLengPtr );
-		printf( "Debug Packetlength [%lld][%llX] \n", BufferLength, BufferLength );
-		printf( "Debug PacketSize [%lld][%llX] \n", m_currentpacketSize, m_currentpacketSize );
-
-		ReadData( RecvBuffer + reserveSize, receiveSize , counter0 );
-
-		if( 0 != m_resultsize )
+		printf("totalRecv : %lld \n", m_totalRecv);
+		if( m_totalRecv < sizeof( Header ) )
 		{
-			time_t now = time( NULL );
-			printf( "[%lld]Result[%s] \n", now - start, Buffer );
-
-			m_resultsize = 0;
+			continue;
 		}
+		uint64_t* recvBufLengPtr = ( uint64_t* )( RecvBuffer + reserveSize + 8 );
+		uint64_t BufferLength = *recvBufLengPtr;
+		m_currentpacketSize = 16 + BufferLength;
+		//printf( "Debug MessagePtr [%llX] \n", RecvBuffer + reserveSize + 16 );
+		//printf( "Debug Packetptr [%llX] \n", recvBufLengPtr );
+		//printf( "Debug Packetlength [%lld][%llX] \n", BufferLength, BufferLength );
+		//printf( "Debug PacketSize [%lld][%llX] \n", m_currentpacketSize, m_currentpacketSize );
+
+		ReadData( RecvBuffer + reserveSize, m_totalRecv, counter0 );
 	}
 
 	//================================================================================================================================================================
