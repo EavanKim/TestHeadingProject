@@ -34,7 +34,6 @@ typedef SendStruct<1, 43> TestBuffer;
 #pragma pack(pop)
 
 uint64_t m_resultsize = 0;
-char Buffer[ 1 << 13 ];
 char RecvBuffer[ 1 << 13 ];
 
 void PrintMem(char* _ptr, uint64_t _length)
@@ -44,18 +43,6 @@ void PrintMem(char* _ptr, uint64_t _length)
 		printf( "%02X", _ptr[ seek ] );
 	}
 	printf( "\n" );
-}
-
-void WriteResultBuffer( char* _buffer, uint64_t _length )
-{
-	printf("[Input debug buffer : %s][debug ptr : %llX] \n", _buffer, _buffer );
-	printf("[Input debug length : %lld] \n", _length );
-
-	char* destPtr = ( char* )( Buffer + m_resultsize );
-	uint64_t length = ( uint64_t )( 1 << 13 ) - m_resultsize;
-	memcpy_s( destPtr, length, _buffer, _length );
-
-	m_resultsize += _length;
 }
 
 // 지금은 받는 패킷이 하나니까 더 복잡하게 처리 안할 예정.
@@ -130,24 +117,24 @@ uint64_t ReadData( char* _buffer, uint64_t _totalrecvSize, uint64_t& _counter )
 	return processSize;
 }
 
-uint64_t ProcessPacket( char* _buffer, uint64_t _totalrecvSize, uint64_t& _counter, uint64_t& _reserveSize, DWORD& _receiveSize, time_t _start )
+uint64_t ProcessPacket( char* _buffer, uint64_t _bufferSize, uint64_t& _counter, uint64_t& _reserveSize, DWORD& _receiveSize, time_t _start )
 {
 	// 일단 상수로 먼저 짭니다.
 	// 어차피 Sync는 테스트 용도에 가까우므로 이 이후에 제대로 작성해야합니다.
-	_totalrecvSize += _receiveSize;
+	_bufferSize += _receiveSize;
 	ProcessTime( _start, _counter );
-	printf( "[reserveSize : %lld][receiveSize : %lld][m_totalRecv : %lld]TestBuffer[% s] \n", _reserveSize, _receiveSize, _totalrecvSize, _buffer + _reserveSize );
+	printf( "[reserveSize : %lld][receiveSize : %lld][bufferSize : %lld]TestBuffer[% s] \n", _reserveSize, _receiveSize, _bufferSize, _buffer + _reserveSize );
 	//++counter0;
 
 
-	if( _totalrecvSize < sizeof( Header ) )
+	if( _bufferSize < sizeof( Header ) )
 	{
 		return 0;
 	}
 	uint64_t* recvBufLengPtr = ( uint64_t* )( _buffer + _reserveSize + 8 );
 	uint64_t BufferLength = *recvBufLengPtr;
 
-	return ReadData( _buffer, _totalrecvSize, _counter );
+	return ReadData( _buffer, _bufferSize, _counter );
 }
 
 int ConnectInfoCreate( sockaddr_in& _result, addrinfo*& m_info )
@@ -257,7 +244,6 @@ int main()
 	uint64_t m_bufferSize = 0;
 
 	uint64_t m_currentpacketSize = 0;
-	uint64_t m_totalRecv = 0;
 
 	WSADATA m_data = {};
 	addrinfo* m_info = nullptr;
@@ -293,27 +279,36 @@ int main()
 	time_t start = time(NULL);
 	while( 1 )
 	{
-		uint64_t reserveSize = ( ( uint64_t )( 1 << 13 ) - m_totalRecv );
-		receiveSize = recv( sessionOpen, RecvBuffer + m_totalRecv, reserveSize, 0 );
+		uint64_t reserveSize = ( ( uint64_t )( 1 << 13 ) - m_bufferSize );
+		if( 0 == reserveSize )
+		{
+			closesocket(sessionOpen);
+			sessionOpen = INVALID_SOCKET;
+			WSACleanup();
+			return 1;
+		}
+
+		receiveSize = recv( sessionOpen, RecvBuffer + m_bufferSize, reserveSize, 0 );
 		if( -1 == receiveSize )
 		{
 			int sockerror = WSAGetLastError();
 			int winerror = GetLastError();
 			// 에러 복구가 안되니 무한이 아니라 나가기
 			closesocket(sessionOpen);
+			sessionOpen = INVALID_SOCKET;
 			WSACleanup();
 			return 1;
 		}
 
-		uint64_t ProcessLength = ProcessPacket( RecvBuffer, m_totalRecv, counter0, reserveSize, receiveSize, start );
+		uint64_t ProcessLength = ProcessPacket( RecvBuffer, m_bufferSize, counter0, reserveSize, receiveSize, start );
 
-		printf("[Process Size : %lld][m_totalRecv : %lld]", ProcessLength, m_totalRecv );
+		printf("[Process Size : %lld][m_bufferSize : %lld] \n", ProcessLength, m_bufferSize );
 
 		if( 0 != ProcessLength )
 		{
-			if( 0 != m_totalRecv )
+			if( 0 != m_bufferSize )
 			{
-				memcpy( RecvBuffer, RecvBuffer + ProcessLength, m_totalRecv );
+				memcpy( RecvBuffer, RecvBuffer + ProcessLength, m_bufferSize );
 			}
 		}
 	}
