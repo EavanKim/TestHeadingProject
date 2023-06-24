@@ -64,14 +64,17 @@ void ParseData(char* _buffer, TestBuffer& _parse )
 	printf( "TestBuffer Pasing Result = [type : %lld][length : %lld][buffer : %lls] \n", _parse.type, _parse.length, _parse.buffer );
 }
 
-void ReadData( char* _buffer, unsigned long long _totalrecvSize )
+void ReadData( char* _buffer, unsigned long long _totalrecvSize, unsigned long long& _counter )
 {
 	unsigned long long leftSize = _totalrecvSize;
 
 	unsigned long long seek = 0;
 
-	while( 0 != leftSize && 64 > leftSize )
+	while( 0 != leftSize )
 	{
+		if( leftSize < sizeof( Header ) )
+			return;
+
 		char* currPtr = _buffer + seek;
 		Header getHeader = {};
 		unsigned long long type = 0;
@@ -82,21 +85,25 @@ void ReadData( char* _buffer, unsigned long long _totalrecvSize )
 		{
 			case 1:
 			{
+				if( leftSize < sizeof( TestBuffer ) )
+					return;
 				TestBuffer parseData = {};
 
 				ParseData( currPtr, parseData );
+				packlength = sizeof( TestBuffer );
 
 				printf( parseData.buffer );
 			}
 				break;
 			default:
 				printf("!!! Packet Parsing Failure !!! \n");
-				break;
+				return;
 		}
 
-		packlength = ( getHeader.length + sizeof( Header ) );
 		seek = seek + packlength;
 		leftSize = leftSize - packlength;
+
+		++_counter;
 	}
 }
 
@@ -255,7 +262,7 @@ int main()
 			printf( "[reserveSize : %lld][receiveSize : %lld][m_totalRecv : %lld] \n", reserveSize, receiveSize, m_totalRecv );
 			printf( "[%lld][count : %lld][MPS : %lld]TestBuffer[%s] \n", Time, counter0, MPS, RecvBuffer + reserveSize + 16 );
 			printf( "Debug BufferInfo [%s] \n", RecvBuffer );
-			++counter0;
+			//++counter0;
 		}
 
 
@@ -270,7 +277,7 @@ int main()
 		printf( "Debug Packetlength [%lld][%llX] \n", BufferLength, BufferLength );
 		printf( "Debug PacketSize [%lld][%llX] \n", m_currentpacketSize, m_currentpacketSize );
 
-		ReadData( RecvBuffer + reserveSize, receiveSize );
+		ReadData( RecvBuffer + reserveSize, receiveSize , counter0 );
 
 		if( 0 != m_resultsize )
 		{
