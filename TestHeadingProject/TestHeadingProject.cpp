@@ -16,6 +16,9 @@ char RecvBuffer[ 1 << 13 ];
 
 void WriteResultBuffer( char* _buffer, unsigned long long _length )
 {
+	printf("[Input debug buffer : %s][debug ptr : %llX] \n", _buffer, _buffer );
+	printf("[Input debug length : %lld] \n", _length );
+
 	char* destPtr = ( char* )( Buffer + m_resultsize );
 	unsigned long long length = ( unsigned long long )( 1 << 13 ) - m_resultsize;
 	memcpy_s( destPtr, length, _buffer, _length );
@@ -194,20 +197,15 @@ int main()
 		printf( "Debug PacketSize [%lld][%llX] \n", m_currentpacketSize, m_currentpacketSize );
 		if( m_currentpacketSize == m_totalRecv )
 		{
-			WriteResultBuffer( RecvBuffer, m_currentpacketSize );
-		#if _DEBUG
-			ZeroMemory( RecvBuffer, sizeof( RecvBuffer ) );
-		#endif
+			WriteResultBuffer( RecvBuffer + reserveSize + 16, BufferLength );
 			m_totalRecv = 0;
 		}
 		else if( m_currentpacketSize < m_totalRecv )
 		{
-			WriteResultBuffer( RecvBuffer + reserveSize + 16, m_currentpacketSize );
+			WriteResultBuffer( RecvBuffer + reserveSize + 16, BufferLength );
 
 			unsigned long long ReserveSize = m_totalRecv - m_currentpacketSize;
-			memcpy( RecvBuffer, RecvBuffer + m_currentpacketSize, ReserveSize );
-
-			//ZeroMemory( RecvBuffer + ReserveSize, sizeof( RecvBuffer ) - ReserveSize );
+			memcpy( RecvBuffer + reserveSize, RecvBuffer + m_currentpacketSize, ReserveSize );
 
 			m_totalRecv = m_totalRecv - m_currentpacketSize;
 		}
@@ -217,7 +215,6 @@ int main()
 			time_t now = time( NULL );
 			printf( "[%lld]Result[%s] \n", now - start, Buffer );
 
-			//ZeroMemory( Buffer, sizeof( Buffer ) );
 			m_resultsize = 0;
 		}
 	}
