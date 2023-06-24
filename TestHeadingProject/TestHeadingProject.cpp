@@ -282,6 +282,7 @@ int main()
 	if( 0 != WaitClient( m_socket, sessionOpen ) )
 		return 1;
 
+	unsigned long long NoSignalCheck = 0;
 	uint64_t counter0 = 0;
 	time_t start = time(NULL);
 	while( 1 )
@@ -296,7 +297,7 @@ int main()
 		}
 
 		receiveSize = recv( sessionOpen, RecvBuffer + m_bufferSize, reserveSize, 0 );
-		if( SOCKET_ERROR == receiveSize || IsNeedReconnectWait )
+		if( SOCKET_ERROR == receiveSize || IsNeedReconnectWait || 1000 < NoSignalCheck )
 		{
 			int sockerror = WSAGetLastError();
 			int winerror = GetLastError();
@@ -313,10 +314,20 @@ int main()
 
 			freeaddrinfo( m_info );
 
+
+			printf("Ready For New Connect");
 			if( 0 != WaitClient( m_socket, sessionOpen ) )
 				return 1;
 
+			counter0 = 0;
+			start = time( NULL );
 			IsNeedReconnectWait = false;
+			NoSignalCheck = 0;
+			continue;
+		}
+		if( 0 == receiveSize )
+		{
+			++NoSignalCheck;
 			continue;
 		}
 
@@ -331,6 +342,12 @@ int main()
 		}
 
 		printf( "[Process Size : %lld][m_bufferSize : %lld] \n", ProcessLength, m_bufferSize );
+
+		if( UINT64_MAX - 10000 <= counter0 )
+		{
+			counter0 = 0;
+			start = time( NULL );
+		}
 	}
 
 	//================================================================================================================================================================
