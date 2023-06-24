@@ -26,7 +26,7 @@ struct SendStruct : public Header
 	SendStruct()
 	{
 		type = _type;
-		length = _buffersize;
+		length = sizeof( Header ) + _buffersize;
 	}
 };
 
@@ -113,6 +113,7 @@ uint64_t ReadData( char* _buffer, uint64_t _totalrecvSize, uint64_t& _counter )
 				packlength = sizeof( TestBuffer );
 				processSize += packlength;
 				printf( parseData.buffer );
+				printf( "\n" );
 			}
 				break;
 			default:
@@ -135,7 +136,7 @@ uint64_t ProcessPacket( char* _buffer, uint64_t _totalrecvSize, uint64_t& _count
 	// 어차피 Sync는 테스트 용도에 가까우므로 이 이후에 제대로 작성해야합니다.
 	_totalrecvSize += _receiveSize;
 	ProcessTime( _start, _counter );
-	printf( "[reserveSize : %lld][receiveSize : %lld][m_totalRecv : %lld]TestBuffer[% s] \n", _reserveSize, _receiveSize, _totalrecvSize, _buffer + _reserveSize + 16 );
+	printf( "[reserveSize : %lld][receiveSize : %lld][m_totalRecv : %lld]TestBuffer[% s] \n", _reserveSize, _receiveSize, _totalrecvSize, _buffer + _reserveSize );
 	//++counter0;
 
 
