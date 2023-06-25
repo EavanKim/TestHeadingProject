@@ -221,7 +221,7 @@ int main()
 		return 1;
 	}
 
-	/*sockaddr_in service;
+	sockaddr_in service;
 	if( 0 != ConnectInfoCreate( service, m_info ) )
 		return 1;
 
@@ -303,40 +303,40 @@ int main()
 			counter0 = 0;
 			start = time( NULL );
 		}
-	}*/
+	}
 
 	//===========================================================================================================================================
 	
-	TestSock_Server server(50000);
+	//TestSock_Server server(50000);
 
-	if( 0 != server.CreateInitializeData() )
-		return 1;
+	//if( 0 != server.CreateInitializeData() )
+	//	return 1;
 
-	server.Binding();
-	CSession* session = server.Wating();
+	//server.Binding();
+	//CSession* session = server.Wating();
 
-	if( nullptr == session )
-		return 1;
+	//if( nullptr == session )
+	//	return 1;
 
-	if( !session->IsConnected() )
-	{
-		delete session;
-	}
+	//if( !session->IsConnected() )
+	//{
+	//	delete session;
+	//}
 
-	while( 1 )
-	{
-		if( !session->IsConnected() )
-		{
-			session = server.Wating();
-			if( !session->IsConnected() )
-			{
-				server.CloseSession( session );
-				return 1;
-			}
-		}
+	//while( 1 )
+	//{
+	//	if( !session->IsConnected() )
+	//	{
+	//		session = server.Wating();
+	//		if( !session->IsConnected() )
+	//		{
+	//			server.CloseSession( session );
+	//			return 1;
+	//		}
+	//	}
 
-		session->Process();
-	}
+	//	session->Process();
+	//}
 
 	WSACleanup();
 
