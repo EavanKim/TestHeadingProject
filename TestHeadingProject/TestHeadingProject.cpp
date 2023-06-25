@@ -2,67 +2,21 @@
 //
 
 #include <iostream>
+#include <stdint.h>
 
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <ws2ipdef.h>
+#include "define.h"
+#include "Util.h"
+#include "CPacketParser.h"
+#include "TestSock.h"
+#include "CSession.h"
 
-#pragma comment(lib, "ws2_32.lib")
-#include <Windows.h>
-
-// 나중에 DLL화 하면 공통헤더로 해결할 패킷 데이터
-#pragma pack(push, 1)
-struct Header
-{
-	uint64_t type = 0;
-	uint64_t length = 0;
-};
-
-template<uint64_t _type, uint64_t _buffersize>
-struct SendStruct : public Header
-{
-	char buffer[ _buffersize ];
-
-	SendStruct()
-	{
-		type = _type;
-		length = sizeof( Header ) + _buffersize;
-	}
-};
-
-typedef SendStruct<1, 0> SessionKey;
-typedef SendStruct<2, 0> Shutdown;
-typedef SendStruct<100, 43> TestBuffer;
-#pragma pack(pop)
 
 uint64_t m_resultsize = 0;
 char RecvBuffer[ 1 << 13 ];
 bool IsNeedReconnectWait = false;
 
-void PrintMem(char* _ptr, uint64_t _length)
-{
-	for( uint64_t seek = 0; _length > seek; ++seek )
-	{
-		printf( "%02X", _ptr[ seek ] );
-	}
-	printf( "\n" );
-}
 
 // 지금은 받는 패킷이 하나니까 더 복잡하게 처리 안할 예정.
-void ParseHeader( char* _buffer, Header& _parse )
-{
-	memcpy( &_parse, _buffer, sizeof( Header ) );
-
-	//printf( "Header Pasing Result = [type : %lld][length : %lld] \n", _parse.type, _parse.length );
-}
-
-void ParseData(char* _buffer, TestBuffer& _parse )
-{
-	memcpy( &_parse, _buffer, sizeof( TestBuffer ) );
-
-	//printf( "TestBuffer Pasing Result = [type : %lld][length : %lld][buffer : %lls] \n", _parse.type, _parse.length, _parse.buffer );
-}
-
 void ProcessTime( time_t& _start, uint64_t& count, time_t now = time(NULL) )
 {
 	if( UINT64_MAX == count )
@@ -266,89 +220,120 @@ int main()
 		return 1;
 	}
 
-	sockaddr_in service;
-	if( 0 != ConnectInfoCreate( service, m_info ) )
+	//sockaddr_in service;
+	//if( 0 != ConnectInfoCreate( service, m_info ) )
+	//	return 1;
+
+	//if( 0 != CreateSocket( m_socket, m_info, service ) )
+	//	return 1;
+
+	//DWORD receiveSize = 0;
+
+	//freeaddrinfo( m_info );
+
+	//SOCKET sessionOpen = INVALID_SOCKET;
+	//
+	//if( 0 != WaitClient( m_socket, sessionOpen ) )
+	//	return 1;
+
+	//unsigned long long NoSignalCheck = 0;
+	//uint64_t counter0 = 0;
+	//time_t start = time(NULL);
+	//while( 1 )
+	//{
+	//	uint64_t reserveSize = ( ( uint64_t )( 1 << 13 ) - m_bufferSize );
+	//	if( 0 == reserveSize )
+	//	{
+	//		closesocket(sessionOpen);
+	//		sessionOpen = INVALID_SOCKET;
+	//		WSACleanup();
+	//		return 1;
+	//	}
+
+	//	receiveSize = recv( sessionOpen, RecvBuffer + m_bufferSize, reserveSize, 0 );
+	//	if( SOCKET_ERROR == receiveSize || IsNeedReconnectWait || 1000 < NoSignalCheck )
+	//	{
+	//		int sockerror = WSAGetLastError();
+	//		int winerror = GetLastError();
+
+	//		closesocket( sessionOpen );
+	//		sessionOpen = INVALID_SOCKET;
+
+	//		// 에러 복구가 안되니 무한이 아니라 나가기
+	//		if( 0 != ConnectInfoCreate( service, m_info ) )
+	//			return 1;
+
+	//		if( 0 != CreateSocket( m_socket, m_info, service ) )
+	//			return 1;
+
+	//		freeaddrinfo( m_info );
+
+
+	//		printf("Ready For New Connect");
+	//		if( 0 != WaitClient( m_socket, sessionOpen ) )
+	//			return 1;
+
+	//		counter0 = 0;
+	//		start = time( NULL );
+	//		IsNeedReconnectWait = false;
+	//		NoSignalCheck = 0;
+	//		continue;
+	//	}
+	//	if( 0 == receiveSize )
+	//	{
+	//		++NoSignalCheck;
+	//		continue;
+	//	}
+
+	//	uint64_t ProcessLength = ProcessPacket( RecvBuffer, m_bufferSize, counter0, reserveSize, receiveSize, start );
+
+	//	if( 0 != ProcessLength )
+	//	{
+	//		if( 0 != m_bufferSize )
+	//		{
+	//			memcpy( RecvBuffer, RecvBuffer + ProcessLength, m_bufferSize );
+	//		}
+	//	}
+
+	//	printf( "[Process Size : %lld][m_bufferSize : %lld] \n", ProcessLength, m_bufferSize );
+
+	//	if( UINT64_MAX - 10000 <= counter0 )
+	//	{
+	//		counter0 = 0;
+	//		start = time( NULL );
+	//	}
+	//}
+
+	TestSock_Server server(50000);
+
+	server.CreateInitializeData();
+	server.Binding();
+	CSession* session = server.Wating();
+
+	if( nullptr == session )
 		return 1;
 
-	if( 0 != CreateSocket( m_socket, m_info, service ) )
-		return 1;
+	if( !session->IsConnected() )
+	{
+		delete session;
+	}
 
-	DWORD receiveSize = 0;
-
-	freeaddrinfo( m_info );
-
-	SOCKET sessionOpen = INVALID_SOCKET;
-	
-	if( 0 != WaitClient( m_socket, sessionOpen ) )
-		return 1;
-
-	unsigned long long NoSignalCheck = 0;
-	uint64_t counter0 = 0;
-	time_t start = time(NULL);
 	while( 1 )
 	{
-		uint64_t reserveSize = ( ( uint64_t )( 1 << 13 ) - m_bufferSize );
-		if( 0 == reserveSize )
+		if( !session->IsConnected() )
 		{
-			closesocket(sessionOpen);
-			sessionOpen = INVALID_SOCKET;
-			WSACleanup();
-			return 1;
-		}
-
-		receiveSize = recv( sessionOpen, RecvBuffer + m_bufferSize, reserveSize, 0 );
-		if( SOCKET_ERROR == receiveSize || IsNeedReconnectWait || 1000 < NoSignalCheck )
-		{
-			int sockerror = WSAGetLastError();
-			int winerror = GetLastError();
-
-			closesocket( sessionOpen );
-			sessionOpen = INVALID_SOCKET;
-
-			// 에러 복구가 안되니 무한이 아니라 나가기
-			if( 0 != ConnectInfoCreate( service, m_info ) )
-				return 1;
-
-			if( 0 != CreateSocket( m_socket, m_info, service ) )
-				return 1;
-
-			freeaddrinfo( m_info );
-
-
-			printf("Ready For New Connect");
-			if( 0 != WaitClient( m_socket, sessionOpen ) )
-				return 1;
-
-			counter0 = 0;
-			start = time( NULL );
-			IsNeedReconnectWait = false;
-			NoSignalCheck = 0;
-			continue;
-		}
-		if( 0 == receiveSize )
-		{
-			++NoSignalCheck;
-			continue;
-		}
-
-		uint64_t ProcessLength = ProcessPacket( RecvBuffer, m_bufferSize, counter0, reserveSize, receiveSize, start );
-
-		if( 0 != ProcessLength )
-		{
-			if( 0 != m_bufferSize )
+			session = server.Wating();
+			if( !session->IsConnected() )
 			{
-				memcpy( RecvBuffer, RecvBuffer + ProcessLength, m_bufferSize );
+				server.CloseSession( session );
+				return 1;
 			}
 		}
 
-		printf( "[Process Size : %lld][m_bufferSize : %lld] \n", ProcessLength, m_bufferSize );
-
-		if( UINT64_MAX - 10000 <= counter0 )
-		{
-			counter0 = 0;
-			start = time( NULL );
-		}
+		session->Process();
 	}
+
+	WSACleanup();
 
 	//================================================================================================================================================================
 }
