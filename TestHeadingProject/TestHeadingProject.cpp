@@ -92,8 +92,6 @@ uint64_t ProcessPacket( char* _buffer, uint64_t& _bufferSize, uint64_t& _counter
 	{
 		return 0;
 	}
-	uint64_t* recvBufLengPtr = ( uint64_t* )( _buffer + _reserveSize + 8 );
-	uint64_t BufferLength = *recvBufLengPtr;
 
 	return ReadData( _buffer, _bufferSize, _counter );
 }
