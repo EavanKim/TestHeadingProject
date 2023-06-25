@@ -17,7 +17,7 @@ public:
 	TestSock_Server( uint64_t _port );
 	~TestSock_Server();
 
-	void CreateInitializeData();
+	int CreateInitializeData();
 	void Binding();
 	CSession* Wating();
 	void CloseSession(CSession* _close);

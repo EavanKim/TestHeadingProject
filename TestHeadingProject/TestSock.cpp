@@ -27,7 +27,7 @@ TestSock_Server::~TestSock_Server()
 	m_sessionList.clear();
 }
 
-void TestSock_Server::CreateInitializeData()
+int TestSock_Server::CreateInitializeData()
 {
 	addrinfo createData = {};
 
@@ -39,13 +39,13 @@ void TestSock_Server::CreateInitializeData()
 	createData.ai_flags = AI_PASSIVE;
 
 	int result = getaddrinfo( nullptr, "50000", &createData, &m_info );
-	if( S_OK != result )
+	if( S_OK != result || NULL == m_info )
 	{
 		// 초기화 실패
 		int sockerror = WSAGetLastError();
 		int winerror = GetLastError();
 
-		return;
+		return -1;
 	}
 	sockaddr_storage storage;
 	memset( &storage, 0, sizeof storage );
@@ -53,6 +53,8 @@ void TestSock_Server::CreateInitializeData()
 	m_service.sin_family = AF_INET;
 	m_service.sin_addr.s_addr = htonl( INADDR_ANY );
 	m_service.sin_port = htons( m_port );
+
+	return 0;
 }
 
 void TestSock_Server::Binding()

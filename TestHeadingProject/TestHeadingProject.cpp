@@ -70,6 +70,7 @@ uint64_t ReadData( char* _buffer, uint64_t& _totalrecvSize, uint64_t& _counter )
 		processSize += getHeader.length;
 		seek += getHeader.length;
 		_totalrecvSize -= getHeader.length;
+		//printf("%lld \n", _totalrecvSize);
 
 		++_counter;
 	}
@@ -220,93 +221,97 @@ int main()
 		return 1;
 	}
 
-	//sockaddr_in service;
-	//if( 0 != ConnectInfoCreate( service, m_info ) )
-	//	return 1;
+	/*sockaddr_in service;
+	if( 0 != ConnectInfoCreate( service, m_info ) )
+		return 1;
 
-	//if( 0 != CreateSocket( m_socket, m_info, service ) )
-	//	return 1;
+	if( 0 != CreateSocket( m_socket, m_info, service ) )
+		return 1;
 
-	//DWORD receiveSize = 0;
+	DWORD receiveSize = 0;
 
-	//freeaddrinfo( m_info );
+	freeaddrinfo( m_info );
 
-	//SOCKET sessionOpen = INVALID_SOCKET;
-	//
-	//if( 0 != WaitClient( m_socket, sessionOpen ) )
-	//	return 1;
+	SOCKET sessionOpen = INVALID_SOCKET;
+	
+	if( 0 != WaitClient( m_socket, sessionOpen ) )
+		return 1;
 
-	//unsigned long long NoSignalCheck = 0;
-	//uint64_t counter0 = 0;
-	//time_t start = time(NULL);
-	//while( 1 )
-	//{
-	//	uint64_t reserveSize = ( ( uint64_t )( 1 << 13 ) - m_bufferSize );
-	//	if( 0 == reserveSize )
-	//	{
-	//		closesocket(sessionOpen);
-	//		sessionOpen = INVALID_SOCKET;
-	//		WSACleanup();
-	//		return 1;
-	//	}
+	uint64_t NoSignalCheck = 0;
+	uint64_t counter0 = 0;
+	time_t start = time(NULL);
+	const uint64_t BUFFER_SIZE = sizeof( RecvBuffer );
+	while( 1 )
+	{
+		uint64_t reserveSize = ( BUFFER_SIZE - m_bufferSize );
+		if( 0 == reserveSize )
+		{
+			closesocket(sessionOpen);
+			sessionOpen = INVALID_SOCKET;
+			WSACleanup();
+			return 1;
+		}
 
-	//	receiveSize = recv( sessionOpen, RecvBuffer + m_bufferSize, reserveSize, 0 );
-	//	if( SOCKET_ERROR == receiveSize || IsNeedReconnectWait || 1000 < NoSignalCheck )
-	//	{
-	//		int sockerror = WSAGetLastError();
-	//		int winerror = GetLastError();
+		receiveSize = recv( sessionOpen, RecvBuffer + m_bufferSize, reserveSize, 0 );
+		if( SOCKET_ERROR == receiveSize || IsNeedReconnectWait || 1000 < NoSignalCheck )
+		{
+			int sockerror = WSAGetLastError();
+			int winerror = GetLastError();
 
-	//		closesocket( sessionOpen );
-	//		sessionOpen = INVALID_SOCKET;
+			closesocket( sessionOpen );
+			sessionOpen = INVALID_SOCKET;
 
-	//		// 에러 복구가 안되니 무한이 아니라 나가기
-	//		if( 0 != ConnectInfoCreate( service, m_info ) )
-	//			return 1;
+			if( 0 != ConnectInfoCreate( service, m_info ) )
+				return 1;
 
-	//		if( 0 != CreateSocket( m_socket, m_info, service ) )
-	//			return 1;
+			if( 0 != CreateSocket( m_socket, m_info, service ) )
+				return 1;
 
-	//		freeaddrinfo( m_info );
+			freeaddrinfo( m_info );
 
 
-	//		printf("Ready For New Connect");
-	//		if( 0 != WaitClient( m_socket, sessionOpen ) )
-	//			return 1;
+			printf("Ready For New Connect");
+			if( 0 != WaitClient( m_socket, sessionOpen ) )
+				return 1;
 
-	//		counter0 = 0;
-	//		start = time( NULL );
-	//		IsNeedReconnectWait = false;
-	//		NoSignalCheck = 0;
-	//		continue;
-	//	}
-	//	if( 0 == receiveSize )
-	//	{
-	//		++NoSignalCheck;
-	//		continue;
-	//	}
+			counter0 = 0;
+			start = time( NULL );
+			IsNeedReconnectWait = false;
+			NoSignalCheck = 0;
+			continue;
+		}
+		if( 0 == receiveSize )
+		{
+			++NoSignalCheck;
+			continue;
+		}
 
-	//	uint64_t ProcessLength = ProcessPacket( RecvBuffer, m_bufferSize, counter0, reserveSize, receiveSize, start );
+		uint64_t ProcessLength = ProcessPacket( RecvBuffer, m_bufferSize, counter0, reserveSize, receiveSize, start );
 
-	//	if( 0 != ProcessLength )
-	//	{
-	//		if( 0 != m_bufferSize )
-	//		{
-	//			memcpy( RecvBuffer, RecvBuffer + ProcessLength, m_bufferSize );
-	//		}
-	//	}
+		if( 0 != ProcessLength )
+		{
+			if( 0 != m_bufferSize )
+			{
+				memcpy( RecvBuffer, RecvBuffer + ProcessLength, m_bufferSize );
+			}
+		}
 
-	//	printf( "[Process Size : %lld][m_bufferSize : %lld] \n", ProcessLength, m_bufferSize );
+		printf( "[Process Size : %lld][m_bufferSize : %lld] \n", ProcessLength, m_bufferSize );
 
-	//	if( UINT64_MAX - 10000 <= counter0 )
-	//	{
-	//		counter0 = 0;
-	//		start = time( NULL );
-	//	}
-	//}
+		if( UINT64_MAX - 10000 <= counter0 )
+		{
+			counter0 = 0;
+			start = time( NULL );
+		}
+	}*/
 
+	//===========================================================================================================================================
+	
 	TestSock_Server server(50000);
 
-	server.CreateInitializeData();
+	if( 0 != server.CreateInitializeData() )
+		return 1;
+
 	server.Binding();
 	CSession* session = server.Wating();
 

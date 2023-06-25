@@ -60,7 +60,6 @@ void CSession::Process()
 
 				seek = seek + parseData->length;
 				m_currentSIze = m_currentSIze - parseData->length;
-				printf("%lld %lld\n", parseData->type, parseData->length );
 
 				PrintTimInfo();
 				printf( "[Count : %lld] %s \n", m_processCounter, parseData->buffer );
@@ -71,7 +70,6 @@ void CSession::Process()
 				printf( "!!! Packet Parsing Failure !!! [type : %lld] \n", m_header->type );
 				return;
 		}
-		printf("%lld, %lld, %lld, %llX, %llX \n", readcount, seek, m_currentSIze, m_RecvBuffer, currPtr);
 	}
 
 	printf("BufferSize %lld \n", m_currentSIze );
@@ -122,7 +120,7 @@ void CSession::TerminateConnection()
 
 void CSession::PrintTimInfo()
 {
-	m_currentSIze = time(NULL);
+	m_currentTime = time(NULL);
 	uint64_t SessionTime = m_currentTime - m_startTime;
 	uint64_t MPS = m_processCounter / ( 0 == SessionTime ? 1 : SessionTime);
 	printf("[%lld][MPS : %lld] ", SessionTime, MPS );
