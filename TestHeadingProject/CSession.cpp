@@ -36,10 +36,13 @@ void CSession::Process()
 
 	m_currentSIze = m_currentSIze + readcount;
 
+	if( m_currentSIze < sizeof( Header ) )
+		return;
+
 	while( 0 != m_currentSIze )
 	{
 		if( m_currentSIze < sizeof( Header ) )
-			return;
+			break;
 
 		char* currPtr = m_RecvBuffer + seek;
 		uint64_t type = 0;
@@ -49,12 +52,12 @@ void CSession::Process()
 		{
 			case 2:
 				TerminateConnection();
-				return;
+				break;
 			case 100:
 			{
 				++m_processCounter;
 				if( m_currentSIze < sizeof( TestBuffer ) )
-					return;
+					break;
 
 				TestBuffer* parseData = ( TestBuffer* )currPtr;
 
@@ -68,7 +71,7 @@ void CSession::Process()
 			default:
 				PrintMem(currPtr, sizeof( Header ) );
 				printf( "!!! Packet Parsing Failure !!! [type : %lld] \n", m_header->type );
-				return;
+				break;
 		}
 	}
 
