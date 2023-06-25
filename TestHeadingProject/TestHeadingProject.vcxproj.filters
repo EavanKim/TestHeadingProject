@@ -27,6 +27,15 @@
     <ClCompile Include="CPacketParser.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="TestSock_Server_Select.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="PrintLog.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="SimpleLock_Win.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TestSock.h">
@@ -42,6 +51,18 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="CPacketParser.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="TestSock_Server_Select.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="PrintLog.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="SimpleLock_Win.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="psudoPCH.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

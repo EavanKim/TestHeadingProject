@@ -1,10 +1,4 @@
-#include <stdint.h>
-#include <time.h>
-#include <iostream>
-
-#include "define.h"
-#include "CSession.h"
-#include "TestSock.h"
+#include "psudoPCH.h"
 
 TestSock_Server::TestSock_Server( uint64_t _port )
 	: m_port( _port )
@@ -25,6 +19,8 @@ TestSock_Server::~TestSock_Server()
 	}
 
 	m_sessionList.clear();
+
+	freeaddrinfo( m_info );
 }
 
 int TestSock_Server::CreateInitializeData()

@@ -1,14 +1,7 @@
 ﻿// TestHeadingProject.cpp : 이 파일에는 'main' 함수가 포함됩니다. 거기서 프로그램 실행이 시작되고 종료됩니다.
 //
 
-#include <iostream>
-#include <stdint.h>
-
-#include "define.h"
-#include "Util.h"
-#include "CPacketParser.h"
-#include "TestSock.h"
-#include "CSession.h"
+#include "psudoPCH.h"
 
 
 uint64_t m_resultsize = 0;
@@ -43,7 +36,7 @@ uint64_t ReadData( char* _buffer, uint64_t& _totalrecvSize, uint64_t& _counter )
 		Header getHeader = {};
 		uint64_t type = 0;
 		uint64_t packlength = 0;
-		ParseHeader( currPtr, getHeader );
+		Util::ParseHeader( currPtr, getHeader );
 
 		switch( getHeader.type )
 		{
@@ -56,7 +49,7 @@ uint64_t ReadData( char* _buffer, uint64_t& _totalrecvSize, uint64_t& _counter )
 					return processSize;
 				TestBuffer parseData = {};
 
-				ParseData( currPtr, parseData );
+				Util::ParseData( currPtr, parseData );
 				packlength = sizeof( TestBuffer );
 				//printf( parseData.buffer );
 				//printf( "\n" );
@@ -219,89 +212,91 @@ int main()
 		return 1;
 	}
 
-	sockaddr_in service;
-	if( 0 != ConnectInfoCreate( service, m_info ) )
-		return 1;
+	//===========================================================================================================================================
 
-	if( 0 != CreateSocket( m_socket, m_info, service ) )
-		return 1;
+	//sockaddr_in service;
+	//if( 0 != ConnectInfoCreate( service, m_info ) )
+	//	return 1;
 
-	DWORD receiveSize = 0;
+	//if( 0 != CreateSocket( m_socket, m_info, service ) )
+	//	return 1;
 
-	freeaddrinfo( m_info );
+	//DWORD receiveSize = 0;
 
-	SOCKET sessionOpen = INVALID_SOCKET;
-	
-	if( 0 != WaitClient( m_socket, sessionOpen ) )
-		return 1;
+	//freeaddrinfo( m_info );
 
-	uint64_t NoSignalCheck = 0;
-	uint64_t counter0 = 0;
-	time_t start = time(NULL);
-	const uint64_t BUFFER_SIZE = sizeof( RecvBuffer );
-	while( 1 )
-	{
-		uint64_t reserveSize = ( BUFFER_SIZE - m_bufferSize );
-		if( 0 == reserveSize )
-		{
-			closesocket(sessionOpen);
-			sessionOpen = INVALID_SOCKET;
-			WSACleanup();
-			return 1;
-		}
+	//SOCKET sessionOpen = INVALID_SOCKET;
+	//
+	//if( 0 != WaitClient( m_socket, sessionOpen ) )
+	//	return 1;
 
-		receiveSize = recv( sessionOpen, RecvBuffer + m_bufferSize, reserveSize, 0 );
-		if( SOCKET_ERROR == receiveSize || IsNeedReconnectWait || 1000 < NoSignalCheck )
-		{
-			int sockerror = WSAGetLastError();
-			int winerror = GetLastError();
+	//uint64_t NoSignalCheck = 0;
+	//uint64_t counter0 = 0;
+	//time_t start = time(NULL);
+	//const uint64_t BUFFER_SIZE = sizeof( RecvBuffer );
+	//while( 1 )
+	//{
+	//	uint64_t reserveSize = ( BUFFER_SIZE - m_bufferSize );
+	//	if( 0 == reserveSize )
+	//	{
+	//		closesocket(sessionOpen);
+	//		sessionOpen = INVALID_SOCKET;
+	//		WSACleanup();
+	//		return 1;
+	//	}
 
-			closesocket( sessionOpen );
-			sessionOpen = INVALID_SOCKET;
+	//	receiveSize = recv( sessionOpen, RecvBuffer + m_bufferSize, reserveSize, 0 );
+	//	if( SOCKET_ERROR == receiveSize || IsNeedReconnectWait || 1000 < NoSignalCheck )
+	//	{
+	//		int sockerror = WSAGetLastError();
+	//		int winerror = GetLastError();
 
-			if( 0 != ConnectInfoCreate( service, m_info ) )
-				return 1;
+	//		closesocket( sessionOpen );
+	//		sessionOpen = INVALID_SOCKET;
 
-			if( 0 != CreateSocket( m_socket, m_info, service ) )
-				return 1;
+	//		if( 0 != ConnectInfoCreate( service, m_info ) )
+	//			return 1;
 
-			freeaddrinfo( m_info );
+	//		if( 0 != CreateSocket( m_socket, m_info, service ) )
+	//			return 1;
+
+	//		freeaddrinfo( m_info );
 
 
-			printf("Ready For New Connect");
-			if( 0 != WaitClient( m_socket, sessionOpen ) )
-				return 1;
+	//		printf("Ready For New Connect");
+	//		if( 0 != WaitClient( m_socket, sessionOpen ) )
+	//			return 1;
 
-			counter0 = 0;
-			start = time( NULL );
-			IsNeedReconnectWait = false;
-			NoSignalCheck = 0;
-			continue;
-		}
-		if( 0 == receiveSize )
-		{
-			++NoSignalCheck;
-			continue;
-		}
+	//		counter0 = 0;
+	//		start = time( NULL );
+	//		IsNeedReconnectWait = false;
+	//		NoSignalCheck = 0;
+	//		continue;
+	//	}
+	//	if( 0 == receiveSize )
+	//	{
+	//		++NoSignalCheck;
+	//		continue;
+	//	}
 
-		uint64_t ProcessLength = ProcessPacket( RecvBuffer, m_bufferSize, counter0, reserveSize, receiveSize, start );
+	//	uint64_t ProcessLength = ProcessPacket( RecvBuffer, m_bufferSize, counter0, reserveSize, receiveSize, start );
 
-		if( 0 != ProcessLength )
-		{
-			if( 0 != m_bufferSize )
-			{
-				memcpy( RecvBuffer, RecvBuffer + ProcessLength, m_bufferSize );
-			}
-		}
+	//	if( 0 != ProcessLength )
+	//	{
+	//		if( 0 != m_bufferSize )
+	//		{
+	//			memcpy( RecvBuffer, RecvBuffer + ProcessLength, m_bufferSize );
+	//		}
+	//	}
 
-		printf( "[Process Size : %lld][m_bufferSize : %lld] \n", ProcessLength, m_bufferSize );
+	//	printf( "[Process Size : %lld][m_bufferSize : %lld] \n", ProcessLength, m_bufferSize );
 
-		if( UINT64_MAX - 10000 <= counter0 )
-		{
-			counter0 = 0;
-			start = time( NULL );
-		}
-	}
+	//	if( UINT64_MAX - 10000 <= counter0 )
+	//	{
+	//		counter0 = 0;
+	//		start = time( NULL );
+	//	}
+	//}
 
 	//===========================================================================================================================================
 	
@@ -323,7 +318,7 @@ int main()
 
 	//while( 1 )
 	//{
-	//	if( !session->IsConnected() )
+	//	if( NULL == session || !session->IsConnected() )
 	//	{
 	//		session = server.Wating();
 	//		if( !session->IsConnected() )
@@ -335,6 +330,23 @@ int main()
 
 	//	session->Process();
 	//}
+
+	//================================================================================================================================================================
+
+	TestSock_Server_Select selectServer( 50000 );
+
+	if( 0 != selectServer.CreateInitializeData() )
+		return 1;
+
+	selectServer.ListenBind();
+
+	while( 1 )
+	{
+		selectServer.Update();
+
+	}
+
+	//================================================================================================================================================================
 
 	WSACleanup();
 

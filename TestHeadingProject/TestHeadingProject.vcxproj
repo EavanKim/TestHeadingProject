@@ -129,14 +129,21 @@
   <ItemGroup>
     <ClCompile Include="CPacketParser.cpp" />
     <ClCompile Include="CSession.cpp" />
+    <ClCompile Include="PrintLog.cpp" />
+    <ClCompile Include="SimpleLock_Win.cpp" />
     <ClCompile Include="TestHeadingProject.cpp" />
     <ClCompile Include="TestSock.cpp" />
+    <ClCompile Include="TestSock_Server_Select.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CPacketParser.h" />
     <ClInclude Include="CSession.h" />
     <ClInclude Include="define.h" />
+    <ClInclude Include="PrintLog.h" />
+    <ClInclude Include="psudoPCH.h" />
+    <ClInclude Include="SimpleLock_Win.h" />
     <ClInclude Include="TestSock.h" />
+    <ClInclude Include="TestSock_Server_Select.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

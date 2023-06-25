@@ -1,12 +1,4 @@
 #pragma once
-#include <vector>
-
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <ws2ipdef.h>
-
-#pragma comment(lib, "ws2_32.lib")
-#include <Windows.h>
 
 //이 객체 하나당 1session.
 // 작업자가 알아보기 쉬운 이름입니다.
