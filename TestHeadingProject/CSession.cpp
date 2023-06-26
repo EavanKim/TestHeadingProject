@@ -67,17 +67,17 @@ void CSession::Process()
 				m_currentSIze = m_currentSIze - parseData->length;
 
 				PrintTimInfo();
-				m_printOut->InsertLog( "[Count : %lld] %s \n", m_processCounter, parseData->buffer );
+				PrintWork( "[Count : %lld] %s \n", m_processCounter, parseData->buffer );
 			}
 			break;
 			default:
 				Util::PrintMem(currPtr, sizeof( Header ) );
-				m_printOut->InsertLog( "!!! Packet Parsing Failure !!! [type : %lld] \n", m_header->type );
+				PrintWork( "!!! Packet Parsing Failure !!! [type : %lld] \n", m_header->type );
 				break;
 		}
 	}
 
-	m_printOut->InsertLog("BufferSize %lld \n", m_currentSIze );
+	PrintWork("BufferSize %lld \n", m_currentSIze );
 	if( 0 != m_currentSIze )
 	{
 		memcpy(m_RecvBuffer, m_RecvBuffer + seek, m_currentSIze );
@@ -214,6 +214,18 @@ void CSession::SelectUnregister( std::unordered_map<SOCKET, CSession*>& _map, fd
 	delete _session;
 }
 
+void CSession::Work()
+{
+	if( m_printOut )
+	{
+		EventPulse();
+	}
+	else
+	{
+		Process();
+	}
+}
+
 void CSession::EventPulse()
 {
 	SetEvent( m_event );
@@ -224,6 +236,6 @@ void CSession::PrintTimInfo()
 	m_currentTime = time(NULL);
 	uint64_t SessionTime = m_currentTime - m_startTime;
 	uint64_t MPS = m_processCounter / ( 0 == SessionTime ? 1 : SessionTime);
-	m_printOut->InsertLog("[%lld][MPS : %lld] ", SessionTime, MPS );
+	PrintWork("[%lld][MPS : %lld] ", SessionTime, MPS );
 }
 

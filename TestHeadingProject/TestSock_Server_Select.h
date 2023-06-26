@@ -2,11 +2,17 @@
 
 //이 객체 하나당 1session.
 // 작업자가 알아보기 쉬운 이름입니다.
+enum ENUM_SESSION_TYPE
+{
+	ENUM_SESSION_SYNC,
+	ENUM_SESSION_PER_THREAD
+};
+
 class CSession;
 class TestSock_Server_Select
 {
 public:
-	TestSock_Server_Select(uint64_t _port);
+	TestSock_Server_Select( uint64_t _port, ENUM_SESSION_TYPE _type = ENUM_SESSION_SYNC );
 	~TestSock_Server_Select();
 
 	int CreateInitializeData();
@@ -19,6 +25,7 @@ public:
 	void Dispose();
 
 private:
+	ENUM_SESSION_TYPE m_sessionType = ENUM_SESSION_SYNC;
 	SOCKET m_bind = INVALID_SOCKET;
 	uint64_t m_port = 0;
 	addrinfo* m_info = nullptr;

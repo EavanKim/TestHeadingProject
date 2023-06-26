@@ -1,7 +1,8 @@
 #include "psudoPCH.h"
 
-TestSock_Server_Select::TestSock_Server_Select( uint64_t _port )
+TestSock_Server_Select::TestSock_Server_Select( uint64_t _port, ENUM_SESSION_TYPE _type )
 	: m_port( _port )
+	, m_sessionType( _type )
 {
 }
 
@@ -116,7 +117,7 @@ void TestSock_Server_Select::Select()
 
 void TestSock_Server_Select::CreateNewSession()
 {
-	CSession* newSession = new CSession( accept( m_bind, NULL, NULL ), &m_log );
+	CSession* newSession = new CSession( accept( m_bind, NULL, NULL ), ( ENUM_SESSION_PER_THREAD == m_sessionType ? &m_log : NULL ) );
 	if( newSession->IsConnected() )
 	{
 		CSession::SelectRegister( m_sessionMap, m_readfds, newSession );
@@ -132,8 +133,9 @@ void TestSock_Server_Select::Do( SOCKET _sock )
 	std::unordered_map<SOCKET, CSession*>::const_iterator iter = m_sessionMap.find(_sock);
 	if( m_sessionMap.end() != iter )
 	{
-		// Event Signal로 Recv 진행
-		iter->second->EventPulse();
+		// PrintOut 객체가 들어가면 자체 스레드 동작
+		// 아니라면 바로 Process
+		iter->second->Work();
 	}
 	else
 	{

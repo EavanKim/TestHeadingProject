@@ -23,7 +23,20 @@ public:
 	static void SelectRegister( std::unordered_map<SOCKET, CSession*>& _map, fd_set& _set, CSession* _session );
 	static void SelectUnregister( std::unordered_map<SOCKET, CSession*>& _map, fd_set& _set, CSession* _session );
 
+	void Work();
 	void EventPulse();
+	template<typename ... Args>
+	void PrintWork( const std::string& format, Args ... args )
+	{
+		if( m_printOut )
+		{
+			m_printOut->InsertLog(format, args ...);
+		}
+		else
+		{
+			printf(format.c_str(), args ...);
+		}
+	}
 
 private:
 	void PrintTimInfo();
