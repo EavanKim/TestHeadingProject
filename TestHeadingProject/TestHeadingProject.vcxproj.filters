@@ -27,13 +27,22 @@
     <ClCompile Include="CPacketParser.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="TestSock_Server_Select.cpp">
+    <ClCompile Include="TestServer_Select.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="PrintLog.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="SimpleLock_Win.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="CSocket.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="CSocket_Listen.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="TestServer_Chat.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -53,7 +62,7 @@
     <ClInclude Include="CPacketParser.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="TestSock_Server_Select.h">
+    <ClInclude Include="TestServer_Select.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="PrintLog.h">
@@ -63,6 +72,18 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="psudoPCH.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="CSocket.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="CSocket_Listen.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="CMessage_BroadCast.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="TestServer_Chat.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

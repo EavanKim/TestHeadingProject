@@ -1,17 +1,17 @@
 #include "psudoPCH.h"
 
-TestSock_Server_Select::TestSock_Server_Select( uint64_t _port, ENUM_SESSION_TYPE _type )
+TestServer_Select::TestServer_Select( uint64_t _port, ENUM_SESSION_TYPE _type )
 	: m_port( _port )
 	, m_sessionType( _type )
 {
 }
 
-TestSock_Server_Select::~TestSock_Server_Select()
+TestServer_Select::~TestServer_Select()
 {
 	Dispose();
 }
 
-int TestSock_Server_Select::CreateInitializeData()
+int TestServer_Select::CreateInitializeData()
 {
 	addrinfo createData = {};
 
@@ -41,7 +41,7 @@ int TestSock_Server_Select::CreateInitializeData()
 	return 0;
 }
 
-void TestSock_Server_Select::ListenBind()
+void TestServer_Select::ListenBind()
 {
 	// 새로 바인딩하면 초기화해버리기
 	if( INVALID_SOCKET != m_bind )
@@ -61,7 +61,7 @@ void TestSock_Server_Select::ListenBind()
 			return;
 		}
 
-		m_bind = socket( m_info->ai_family, m_info->ai_socktype, m_info->ai_protocol );
+		m_bind = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
 		if( INVALID_SOCKET == m_bind )
 		{
 			continue;
@@ -92,7 +92,7 @@ void TestSock_Server_Select::ListenBind()
 	FD_SET( m_bind, &m_readfds );
 }
 
-void TestSock_Server_Select::Select()
+void TestServer_Select::Select()
 {
 	fd_set tempfds = m_readfds;
 	uint64_t fd_num = select( 0, &tempfds, NULL, NULL, NULL );
@@ -115,7 +115,7 @@ void TestSock_Server_Select::Select()
 	}
 }
 
-void TestSock_Server_Select::CreateNewSession()
+void TestServer_Select::CreateNewSession()
 {
 	CSession* newSession = new CSession( accept( m_bind, NULL, NULL ), ( ENUM_SESSION_PER_THREAD == m_sessionType ? &m_log : NULL ) );
 	if( newSession->IsConnected() )
@@ -128,7 +128,7 @@ void TestSock_Server_Select::CreateNewSession()
 	}
 }
 
-void TestSock_Server_Select::Do( SOCKET _sock )
+void TestServer_Select::Do( SOCKET _sock )
 {
 	std::unordered_map<SOCKET, CSession*>::const_iterator iter = m_sessionMap.find(_sock);
 	if( m_sessionMap.end() != iter )
@@ -145,7 +145,7 @@ void TestSock_Server_Select::Do( SOCKET _sock )
 	}
 }
 
-void TestSock_Server_Select::Update()
+void TestServer_Select::Update()
 {
 	Select();
 
@@ -153,7 +153,7 @@ void TestSock_Server_Select::Update()
 	m_log.FlushLog();
 }
 
-void TestSock_Server_Select::Dispose()
+void TestServer_Select::Dispose()
 {
 	// 재연결을 받을 수 있는 내용부터 처리합니다.
 	if( INVALID_SOCKET != m_bind )

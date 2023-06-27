@@ -24,6 +24,8 @@ public:
 	static void SelectUnregister( std::unordered_map<SOCKET, CSession*>& _map, fd_set& _set, CSession* _session );
 
 	void Work();
+	void Process( std::vector<CMessage>& _receiveDatas );
+	void Work( std::vector<CMessage>& _receiveDatas );
 	void EventPulse();
 	template<typename ... Args>
 	void PrintWork( const std::string& format, Args ... args )
@@ -38,11 +40,19 @@ public:
 		}
 	}
 
+	bool CheckSessionKey(uint64_t _sessionKey)
+	{
+		return m_sessionKey == _sessionKey;
+	}
+
+	int Send( Header* _data );
+
 private:
 	void PrintTimInfo();
 
 	volatile LONG64 m_threadAlive = 1;
 	volatile LONG64 m_threadJobType = 0;
+	uint64_t m_sessionKey = 0;
 	HANDLE m_event = INVALID_HANDLE_VALUE;
 	std::thread* m_sessionThread = nullptr;
 	PrintLog* m_printOut = nullptr;

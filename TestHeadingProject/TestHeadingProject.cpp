@@ -10,7 +10,7 @@ bool IsNeedReconnectWait = false;
 
 
 // 지금은 받는 패킷이 하나니까 더 복잡하게 처리 안할 예정.
-void ProcessTime( time_t& _start, uint64_t& count, time_t now = time(NULL) )
+void ProcessTime( time_t& _start, uint64_t& count, time_t now = time( NULL ) )
 {
 	if( UINT64_MAX == count )
 	{
@@ -54,9 +54,9 @@ uint64_t ReadData( char* _buffer, uint64_t& _totalrecvSize, uint64_t& _counter )
 				//printf( parseData.buffer );
 				//printf( "\n" );
 			}
-				break;
+			break;
 			default:
-				printf("!!! Packet Parsing Failure !!! \n");
+				printf( "!!! Packet Parsing Failure !!! \n" );
 				return processSize;
 		}
 
@@ -77,7 +77,7 @@ uint64_t ProcessPacket( char* _buffer, uint64_t& _bufferSize, uint64_t& _counter
 	// 어차피 Sync는 테스트 용도에 가까우므로 이 이후에 제대로 작성해야합니다.
 	_bufferSize += _receiveSize;
 	ProcessTime( _start, _counter );
-	printf( "[reserveSize : %lld][receiveSize : %lld][bufferSize : %lld]TestBuffer[% s] \n", _reserveSize, _receiveSize, _bufferSize, _buffer + _reserveSize );
+	printf( "[reserveSize : %lld][receiveSize : %lld][bufferSize : %ulld]TestBuffer[% s] \n", _reserveSize, _receiveSize, _bufferSize, _buffer + _reserveSize );
 	//++counter0;
 
 
@@ -119,7 +119,7 @@ int ConnectInfoCreate( sockaddr_in& _result, addrinfo*& m_info )
 	return 0;
 }
 
-int CreateSocket(SOCKET& _listenSock, addrinfo* _info, sockaddr_in& _service )
+int CreateSocket( SOCKET& _listenSock, addrinfo* _info, sockaddr_in& _service )
 {
 	int result = 0;
 	int loopCounter = 0;
@@ -192,162 +192,213 @@ int WaitClient( SOCKET& _listenSock, SOCKET& _session )
 	return 0;
 }
 
+void DoRawCode()
+{
+	//sockaddr_in service;
+		//if( 0 != ConnectInfoCreate( service, m_info ) )
+		//	return 1;
+		//
+		//if( 0 != CreateSocket( m_socket, m_info, service ) )
+		//	return 1;
+		//
+		//DWORD receiveSize = 0;
+		//
+		//freeaddrinfo( m_info );
+		//
+		//SOCKET sessionOpen = INVALID_SOCKET;
+		//
+		//if( 0 != WaitClient( m_socket, sessionOpen ) )
+		//	return 1;
+		//
+		//uint64_t NoSignalCheck = 0;
+		//uint64_t counter0 = 0;
+		//time_t start = time(NULL);
+		//const uint64_t BUFFER_SIZE = sizeof( RecvBuffer );
+		//while( 1 )
+		//{
+		//	uint64_t reserveSize = ( BUFFER_SIZE - m_bufferSize );
+		//	if( 0 == reserveSize )
+		//	{
+		//		closesocket(sessionOpen);
+		//		sessionOpen = INVALID_SOCKET;
+		//		WSACleanup();
+		//		return 1;
+		//	}
+		//
+		//	receiveSize = recv( sessionOpen, RecvBuffer + m_bufferSize, reserveSize, 0 );
+		//	if( SOCKET_ERROR == receiveSize || IsNeedReconnectWait || 1000 < NoSignalCheck )
+		//	{
+		//		int sockerror = WSAGetLastError();
+		//		int winerror = GetLastError();
+		//
+		//		closesocket( sessionOpen );
+		//		sessionOpen = INVALID_SOCKET;
+		//
+		//		if( 0 != ConnectInfoCreate( service, m_info ) )
+		//			return 1;
+		//
+		//		if( 0 != CreateSocket( m_socket, m_info, service ) )
+		//			return 1;
+		//
+		//		freeaddrinfo( m_info );
+		//
+		//
+		//		printf("Ready For New Connect");
+		//		if( 0 != WaitClient( m_socket, sessionOpen ) )
+		//			return 1;
+		//
+		//		counter0 = 0;
+		//		start = time( NULL );
+		//		IsNeedReconnectWait = false;
+		//		NoSignalCheck = 0;
+		//		continue;
+		//	}
+		//	if( 0 == receiveSize )
+		//	{
+		//		++NoSignalCheck;
+		//		continue;
+		//	}
+		//
+		//	uint64_t ProcessLength = ProcessPacket( RecvBuffer, m_bufferSize, counter0, reserveSize, receiveSize, start );
+		//
+		//	if( 0 != ProcessLength )
+		//	{
+		//		if( 0 != m_bufferSize )
+		//		{
+		//			memcpy( RecvBuffer, RecvBuffer + ProcessLength, m_bufferSize );
+		//		}
+		//	}
+		//
+		//	printf( "[Process Size : %lld][m_bufferSize : %lld] \n", ProcessLength, m_bufferSize );
+		//
+		//	if( UINT64_MAX - 10000 <= counter0 )
+		//	{
+		//		counter0 = 0;
+		//		start = time( NULL );
+		//	}
+		//}
+}
+
+void DoClassCode_First()
+{
+	//TestSock_Server server(50000);
+		//
+		//if( 0 != server.CreateInitializeData() )
+		//	return 1;
+		//
+		//server.Binding();
+		//CSession* session = server.Wating();
+		//
+		//if( nullptr == session )
+		//	return 1;
+		//
+		//if( !session->IsConnected() )
+		//{
+		//	delete session;
+		//}
+		//
+		//while( 1 )
+		//{
+		//	if( NULL == session || !session->IsConnected() )
+		//	{
+		//		session = server.Wating();
+		//		if( !session->IsConnected() )
+		//		{
+		//			server.CloseSession( session );
+		//			return 1;
+		//		}
+		//	}
+		//
+		//	session->Process();
+		//}
+}
+
+void DoClassCode_Second()
+{
+	//TestServer_Select selectServer( 50000 );
+
+	//if( 0 != selectServer.CreateInitializeData() )
+	//	return 1;
+
+	//selectServer.ListenBind();
+
+	//while( 1 )
+	//{
+	//	selectServer.Update();
+	//}
+}
+
 int main()
 {
-	uint64_t m_bufferSize = 0;
-
-	uint64_t m_currentpacketSize = 0;
-
-	WSADATA m_data = {};
-	addrinfo* m_info = nullptr;
-	SOCKET m_socket = INVALID_SOCKET;
-
-	int result = WSAStartup( MAKEWORD( 2, 2 ), &m_data );
-	if( S_OK != result )
+	try
 	{
-		// 초기화 실패
-		int sockerror = WSAGetLastError();
-		int winerror = GetLastError();
-		// exception 객체 생성되면 throw하면서 에러 정보 송신
-		return 1;
+
+		uint64_t m_bufferSize = 0;
+
+		uint64_t m_currentpacketSize = 0;
+
+		WSADATA m_data = {};
+		SOCKET m_socket = INVALID_SOCKET;
+
+		int result = WSAStartup( MAKEWORD( 2, 2 ), &m_data );
+		if( S_OK != result )
+		{
+			// 초기화 실패
+			int sockerror = WSAGetLastError();
+			int winerror = GetLastError();
+			// exception 객체 생성되면 throw하면서 에러 정보 송신
+			return 1;
+		}
+
+		// 주석 된 것들은 설령 살리더라도 한 번씩 손봐야 합니다.
+		// 클래스 스팩이 계속 바뀌고 있습니다.
+		//===========================================================================================================================================
+		//
+		//	DoRawCode();
+		//
+		//===========================================================================================================================================
+		//
+		//	DoClassCode_First();
+		//
+		//================================================================================================================================================================
+		//
+		//	DoClassCode_Second();
+		//================================================================================================================================================================
+		// 
+		// 자체 소켓 규약.
+		// 최초에 Port를 정하고나면 뒤로 10개까지는 Reserve입니다.
+		// 10개 단위로 끊어주세요
+
+		// DoClassCode_Second와 내용은 같지만
+		// 클래스 스팩이 바뀌고 나서의 작업입니다.
+		TestServer_Chat selectServer( 50000 );
+		selectServer.Ready();
+
+		while( 1 )
+		{
+			selectServer.Update();
+		}
+
+		//================================================================================================================================================================
+
+		WSACleanup();
+
+		//================================================================================================================================================================
 	}
-
-	//===========================================================================================================================================
-
-	//sockaddr_in service;
-	//if( 0 != ConnectInfoCreate( service, m_info ) )
-	//	return 1;
-
-	//if( 0 != CreateSocket( m_socket, m_info, service ) )
-	//	return 1;
-
-	//DWORD receiveSize = 0;
-
-	//freeaddrinfo( m_info );
-
-	//SOCKET sessionOpen = INVALID_SOCKET;
-	//
-	//if( 0 != WaitClient( m_socket, sessionOpen ) )
-	//	return 1;
-
-	//uint64_t NoSignalCheck = 0;
-	//uint64_t counter0 = 0;
-	//time_t start = time(NULL);
-	//const uint64_t BUFFER_SIZE = sizeof( RecvBuffer );
-	//while( 1 )
-	//{
-	//	uint64_t reserveSize = ( BUFFER_SIZE - m_bufferSize );
-	//	if( 0 == reserveSize )
-	//	{
-	//		closesocket(sessionOpen);
-	//		sessionOpen = INVALID_SOCKET;
-	//		WSACleanup();
-	//		return 1;
-	//	}
-
-	//	receiveSize = recv( sessionOpen, RecvBuffer + m_bufferSize, reserveSize, 0 );
-	//	if( SOCKET_ERROR == receiveSize || IsNeedReconnectWait || 1000 < NoSignalCheck )
-	//	{
-	//		int sockerror = WSAGetLastError();
-	//		int winerror = GetLastError();
-
-	//		closesocket( sessionOpen );
-	//		sessionOpen = INVALID_SOCKET;
-
-	//		if( 0 != ConnectInfoCreate( service, m_info ) )
-	//			return 1;
-
-	//		if( 0 != CreateSocket( m_socket, m_info, service ) )
-	//			return 1;
-
-	//		freeaddrinfo( m_info );
-
-
-	//		printf("Ready For New Connect");
-	//		if( 0 != WaitClient( m_socket, sessionOpen ) )
-	//			return 1;
-
-	//		counter0 = 0;
-	//		start = time( NULL );
-	//		IsNeedReconnectWait = false;
-	//		NoSignalCheck = 0;
-	//		continue;
-	//	}
-	//	if( 0 == receiveSize )
-	//	{
-	//		++NoSignalCheck;
-	//		continue;
-	//	}
-
-	//	uint64_t ProcessLength = ProcessPacket( RecvBuffer, m_bufferSize, counter0, reserveSize, receiveSize, start );
-
-	//	if( 0 != ProcessLength )
-	//	{
-	//		if( 0 != m_bufferSize )
-	//		{
-	//			memcpy( RecvBuffer, RecvBuffer + ProcessLength, m_bufferSize );
-	//		}
-	//	}
-
-	//	printf( "[Process Size : %lld][m_bufferSize : %lld] \n", ProcessLength, m_bufferSize );
-
-	//	if( UINT64_MAX - 10000 <= counter0 )
-	//	{
-	//		counter0 = 0;
-	//		start = time( NULL );
-	//	}
-	//}
-
-	//===========================================================================================================================================
-	
-	//TestSock_Server server(50000);
-
-	//if( 0 != server.CreateInitializeData() )
-	//	return 1;
-
-	//server.Binding();
-	//CSession* session = server.Wating();
-
-	//if( nullptr == session )
-	//	return 1;
-
-	//if( !session->IsConnected() )
-	//{
-	//	delete session;
-	//}
-
-	//while( 1 )
-	//{
-	//	if( NULL == session || !session->IsConnected() )
-	//	{
-	//		session = server.Wating();
-	//		if( !session->IsConnected() )
-	//		{
-	//			server.CloseSession( session );
-	//			return 1;
-	//		}
-	//	}
-
-	//	session->Process();
-	//}
-
-	//================================================================================================================================================================
-
-	TestSock_Server_Select selectServer( 50000 );
-
-	if( 0 != selectServer.CreateInitializeData() )
-		return 1;
-
-	selectServer.ListenBind();
-
-	while( 1 )
+	catch( ... )
 	{
-		selectServer.Update();
+		// 크래시하면 죽어버리고, 바로 죽는게 억지로 살리는 것 보단 낫겠지만... 적어도 뭔 일이 벌어졌는지는 볼 수 있도록 합니다.
+		
+		TCHAR* message = nullptr;
+		FormatMessage( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+					   nullptr,
+					   GetLastError(),
+					   MAKELANGID( LANG_NEUTRAL, SUBLANG_DEFAULT ),
+					   ( TCHAR* )&message,
+					   0,
+					   nullptr );
+
+		wprintf( L" LastError String : %s", message);
+		LocalFree( message );
 	}
-
-	//================================================================================================================================================================
-
-	WSACleanup();
-
-	//================================================================================================================================================================
 }

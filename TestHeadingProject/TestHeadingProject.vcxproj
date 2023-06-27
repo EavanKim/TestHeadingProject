@@ -104,6 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <ExceptionHandling>Sync</ExceptionHandling>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -129,21 +130,28 @@
   <ItemGroup>
     <ClCompile Include="CPacketParser.cpp" />
     <ClCompile Include="CSession.cpp" />
+    <ClCompile Include="CSocket.cpp" />
+    <ClCompile Include="CSocket_Listen.cpp" />
     <ClCompile Include="PrintLog.cpp" />
     <ClCompile Include="SimpleLock_Win.cpp" />
     <ClCompile Include="TestHeadingProject.cpp" />
+    <ClCompile Include="TestServer_Chat.cpp" />
     <ClCompile Include="TestSock.cpp" />
-    <ClCompile Include="TestSock_Server_Select.cpp" />
+    <ClCompile Include="TestServer_Select.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CMessage_BroadCast.h" />
     <ClInclude Include="CPacketParser.h" />
     <ClInclude Include="CSession.h" />
+    <ClInclude Include="CSocket.h" />
+    <ClInclude Include="CSocket_Listen.h" />
     <ClInclude Include="define.h" />
     <ClInclude Include="PrintLog.h" />
     <ClInclude Include="psudoPCH.h" />
     <ClInclude Include="SimpleLock_Win.h" />
+    <ClInclude Include="TestServer_Chat.h" />
     <ClInclude Include="TestSock.h" />
-    <ClInclude Include="TestSock_Server_Select.h" />
+    <ClInclude Include="TestServer_Select.h" />
     <ClInclude Include="Util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

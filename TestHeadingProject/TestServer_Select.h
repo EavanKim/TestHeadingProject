@@ -1,19 +1,10 @@
 #pragma once
 
-//이 객체 하나당 1session.
-// 작업자가 알아보기 쉬운 이름입니다.
-enum ENUM_SESSION_TYPE
-{
-	ENUM_SESSION_SYNC,
-	ENUM_SESSION_PER_THREAD
-};
-
-class CSession;
-class TestSock_Server_Select
+class TestServer_Select
 {
 public:
-	TestSock_Server_Select( uint64_t _port, ENUM_SESSION_TYPE _type = ENUM_SESSION_SYNC );
-	~TestSock_Server_Select();
+	TestServer_Select( uint64_t _port, ENUM_SESSION_TYPE _type = ENUM_SESSION_SYNC );
+	~TestServer_Select();
 
 	int CreateInitializeData();
 	void ListenBind();

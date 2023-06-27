@@ -84,6 +84,18 @@ void CSession::Process()
 	}
 }
 
+void CSession::Work()
+{
+	if( m_printOut )
+	{
+		EventPulse();
+	}
+	else
+	{
+		Process();
+	}
+}
+
 void CSession::ErrorProcess()
 {
 	TerminateConnection();
@@ -214,7 +226,97 @@ void CSession::SelectUnregister( std::unordered_map<SOCKET, CSession*>& _map, fd
 	delete _session;
 }
 
-void CSession::Work()
+void CSession::Process( std::vector<CMessage>& _receiveDatas )
+{
+	uint64_t seek = 0;
+	int readcount = recv( m_session, m_RecvBuffer + m_currentSIze, m_bufferSIze - m_currentSIze, 0 );
+	if( -1 == readcount )
+	{
+		ErrorProcess();
+		return;
+	}
+	if( 0 == readcount )
+	{
+		ZeroReceiveProcess();
+		return;
+	}
+
+	m_currentSIze = m_currentSIze + readcount;
+
+	if( m_currentSIze < sizeof( Header ) )
+		return;
+
+	while( 0 != m_currentSIze )
+	{
+		if( m_currentSIze < sizeof( Header ) )
+			break;
+
+		char* currPtr = m_RecvBuffer + seek;
+		uint64_t type = 0;
+		Header* m_header = ( Header* )currPtr;
+
+		switch( m_header->type )
+		{
+			case 1:
+			{
+				if( m_currentSIze < sizeof( SessionKey ) )
+					break;
+				SessionKey* parseData = ( SessionKey* )currPtr;
+				m_sessionKey = parseData->sessionKey;
+
+				seek = seek + parseData->length;
+				m_currentSIze = m_currentSIze - parseData->length;
+			}
+				break;
+			case 2:
+				TerminateConnection();
+				break;
+			case 100:
+			{
+				++m_processCounter;
+				if( m_currentSIze < sizeof( TestBuffer ) )
+					break;
+
+				TestBuffer* parseData = ( TestBuffer* )currPtr;
+
+				seek = seek + parseData->length;
+				m_currentSIze = m_currentSIze - parseData->length;
+
+				PrintTimInfo();
+				PrintWork( "[Count : %lld] %s \n", m_processCounter, parseData->buffer );
+			}
+			case 1000:
+			{
+				++m_processCounter;
+				if( m_currentSIze < sizeof( ChatBuffer ) )
+					break;
+
+				ChatBuffer* parseData = new ChatBuffer();
+				memcpy( parseData, currPtr, sizeof( ChatBuffer ) );
+
+				seek = seek + parseData->length;
+				m_currentSIze = m_currentSIze - parseData->length;
+
+				PrintTimInfo();
+				PrintWork( "[Count : %lld] %s \n", m_processCounter, parseData->buffer );
+				_receiveDatas.push_back( { 0, parseData } );
+			}
+			break;
+			default:
+				Util::PrintMem( currPtr, sizeof( Header ) );
+				PrintWork( "!!! Packet Parsing Failure !!! [type : %lld] \n", m_header->type );
+				break;
+		}
+	}
+
+	PrintWork( "BufferSize %lld \n", m_currentSIze );
+	if( 0 != m_currentSIze )
+	{
+		memcpy( m_RecvBuffer, m_RecvBuffer + seek, m_currentSIze );
+	}
+}
+
+void CSession::Work( std::vector<CMessage>& _receiveDatas )
 {
 	if( m_printOut )
 	{
@@ -222,13 +324,18 @@ void CSession::Work()
 	}
 	else
 	{
-		Process();
+		Process( _receiveDatas );
 	}
 }
 
 void CSession::EventPulse()
 {
 	SetEvent( m_event );
+}
+
+int CSession::Send( Header* _data )
+{
+	return send( m_session, ( char* )_data, _data->length, 0 );
 }
 
 void CSession::PrintTimInfo()

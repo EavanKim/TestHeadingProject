@@ -18,6 +18,7 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
+#include <queue>
 
 #include "define.h"
 #include "Util.h"
@@ -28,8 +29,16 @@
 
 #include "PrintLog.h"
 
+#include "CMessage_BroadCast.h"
+
+class CSession;
+#include "CSocket.h"
+#include "CSocket_Listen.h"
+
 #include "TestSock.h"
 
-#include "TestSock_Server_Select.h"
+#include "TestServer_Select.h"
+
+#include "TestServer_Chat.h"
 
 #include "CSession.h"
