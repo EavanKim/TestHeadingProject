@@ -455,6 +455,16 @@ fd_set fn_select( const fd_set& _readfds, fd_set& _temp )
 	return _temp;
 }
 
+fd_set fn_select_pathThrough( const fd_set& _readfds, fd_set& _temp, uint32_t _wait = 5 )
+{
+	struct timeval tv;
+	tv.tv_sec = _wait;
+	tv.tv_usec = 0;
+	_temp = _readfds;
+	uint64_t fd_num = select( 0, &_temp, NULL, NULL, &tv );
+	return _temp;
+}
+
 void fn_create(const SOCKET _newConn, fd_set& _set, std::unordered_map<SOCKET, SimpleSession>& _sockList)
 {
 	SOCKET newThing = accept( _newConn, NULL, NULL );
@@ -655,8 +665,8 @@ int main()
 
 		while( 1 )
 		{
-			fn_process_recv( fn_select( fd_bind, fd_temp ), recvList, bindMap, fd_bind, sock_bind );
-			fn_process_recv( fn_select( fd_broadCast, fd_temp ), recvList, broadCastList, fd_broadCast, sock_broadCast );
+			fn_process_recv( fn_select_pathThrough( fd_bind, fd_temp ), recvList, bindMap, fd_bind, sock_bind );
+			fn_process_recv( fn_select_pathThrough( fd_broadCast, fd_temp ), recvList, broadCastList, fd_broadCast, sock_broadCast );
 			fn_broadCast( broadCastList, recvList );
 		}
 
