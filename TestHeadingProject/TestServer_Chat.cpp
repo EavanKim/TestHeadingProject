@@ -2,8 +2,8 @@
 
 TestServer_Chat::TestServer_Chat( uint16_t _startPort )
 {
-	m_proxy = new CSocket_Listen( _startPort );
-	m_broadCast = new CSocket_Listen( _startPort + 1000 );
+	m_proxy = new CSocket_Listen( 0, _startPort );
+	m_broadCast = new CSocket_Listen( 1, _startPort + 1000 );
 }
 
 TestServer_Chat::~TestServer_Chat()

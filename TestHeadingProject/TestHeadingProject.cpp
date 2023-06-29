@@ -8,7 +8,7 @@ uint64_t m_resultsize = 0;
 char RecvBuffer[ 1 << 13 ];
 bool IsNeedReconnectWait = false;
 
-
+//================================================================================================================================================================
 // 지금은 받는 패킷이 하나니까 더 복잡하게 처리 안할 예정.
 void ProcessTime( time_t& _start, uint64_t& count, time_t now = time( NULL ) )
 {
@@ -25,14 +25,14 @@ void ProcessTime( time_t& _start, uint64_t& count, time_t now = time( NULL ) )
 uint64_t ReadData( char* _buffer, uint64_t& _totalrecvSize, uint64_t& _counter )
 {
 	uint64_t processSize = 0;
-	uint64_t seek = 0;
+	uint64_t lastLength = 0;
 
 	while( 0 != _totalrecvSize )
 	{
 		if( _totalrecvSize < sizeof( Header ) )
 			return processSize;
 
-		char* currPtr = _buffer + seek;
+		char* currPtr = _buffer + lastLength;
 		Header getHeader = {};
 		uint64_t type = 0;
 		uint64_t packlength = 0;
@@ -61,7 +61,7 @@ uint64_t ReadData( char* _buffer, uint64_t& _totalrecvSize, uint64_t& _counter )
 		}
 
 		processSize += getHeader.length;
-		seek += getHeader.length;
+		lastLength += getHeader.length;
 		_totalrecvSize -= getHeader.length;
 		//printf("%lld \n", _totalrecvSize);
 
@@ -279,6 +279,8 @@ void DoRawCode()
 		//}
 }
 
+//================================================================================================================================================================
+
 void DoClassCode_First()
 {
 	//TestSock_Server server(50000);
@@ -313,6 +315,8 @@ void DoClassCode_First()
 		//}
 }
 
+//================================================================================================================================================================
+
 void DoClassCode_Second()
 {
 	//TestServer_Select selectServer( 50000 );
@@ -328,17 +332,277 @@ void DoClassCode_Second()
 	//}
 }
 
+//================================================================================================================================================================
+
+struct SimpleSession
+{
+	SimpleSession()
+	{
+		ZeroMemory( this, sizeof( SimpleSession ) );
+	}
+
+	uint64_t		sesssionKey = 0;
+	uint64_t		lastLength								= 0;
+	char			buffer[ DEFAULT_SOCKET_BUFFER_LENGTH ]	= {};
+};
+
+struct SimpleSocket
+{
+	SOCKET _sock;
+};
+
+SOCKET				sock_bind				= INVALID_SOCKET;
+SOCKET				sock_broadCast			= INVALID_SOCKET;
+uint16_t			port_bind				= 50000;
+uint16_t			port_broadCast			= 51000;
+sockaddr_in			listenIn_bind			= {};
+sockaddr_in			listenIn_broadCast		= {};
+fd_set				fd_bind					= {};
+fd_set				fd_broadCast			= {};
+fd_set				fd_temp					= {};
+std::vector<SOCKET> clients_bind			= {};
+std::vector<SOCKET> clients_broadCast		= {};
+
+void fn_printTime()
+{
+	static time_t	startTime	= time(NULL);
+	time_t			currentTime = time(NULL);
+
+	printf("%lld", currentTime - startTime);
+}
+
+int fn_message_send( SOCKET& _socket, Header* _message )
+{
+	return send( _socket, ( char* )_message, _message->length, 0 );
+}
+
+sockaddr_in& Setaddr( uint16_t _port, sockaddr_in& _listenIn )
+{
+	sockaddr_storage storage;
+	memset( &storage, 0, sizeof storage );
+	// The socket address to be passed to bind
+	_listenIn.sin_family = AF_INET;
+	_listenIn.sin_addr.s_addr = htonl( INADDR_ANY );
+	_listenIn.sin_port = htons( _port );
+
+	return _listenIn;
+}
+
+SOCKET fn_bind( SOCKET& _socket, sockaddr_in& _listenIn )
+{
+		_socket		= INVALID_SOCKET;
+	int result		= 0;
+	int loopCounter = 0;
+
+	// 새로 바인딩하면 초기화해버리기
+	if( INVALID_SOCKET != _socket )
+	{
+		closesocket( _socket );
+		_socket = INVALID_SOCKET;
+	}
+
+	do
+	{
+		if( 5 < loopCounter )
+		{
+			int winerror = GetLastError();
+			// exception 객체 생성되면 throw하면서 에러 정보 송신
+			return INVALID_SOCKET;
+		}
+
+		_socket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
+		if( INVALID_SOCKET == _socket )
+		{
+			continue;
+		}
+
+		result = bind( _socket, ( SOCKADDR* )&_listenIn, sizeof( _listenIn ) );
+		if( result == SOCKET_ERROR )
+		{
+			int err = 0;
+			if( WSAECONNREFUSED == ( err = WSAGetLastError() ) )
+			{
+				closesocket( _socket );
+				_socket = INVALID_SOCKET;
+				continue;
+			}
+			printf( "connect failed with error: %d\n", err );
+			closesocket( _socket );
+			return INVALID_SOCKET;
+		}
+	}
+	while( S_OK != result );
+
+
+	return _socket;
+}
+
+fd_set& fn_ready( SOCKET _bind, fd_set& _inSet )
+{
+	FD_ZERO( &_inSet );
+
+	if( SOCKET_ERROR == listen( _bind, 5 ) )
+		return _inSet;
+
+	FD_SET( _bind, &_inSet );
+	return _inSet;
+}
+
+fd_set fn_select( const fd_set& _readfds, fd_set& _temp )
+{
+	_temp = _readfds;
+	uint64_t fd_num = select( 0, &_temp, NULL, NULL, NULL );
+	return _temp;
+}
+
+void fn_create(const SOCKET _newConn, fd_set& _set, std::unordered_map<SOCKET, SimpleSession>& _sockList)
+{
+	SOCKET newThing = accept( _newConn, NULL, NULL );
+	if( INVALID_SOCKET != newThing )
+	{
+		_sockList.insert( std::make_pair( newThing, SimpleSession() ) );
+		FD_SET( newThing, &_set );
+	}
+}
+
+void fn_parse( const SOCKET _newConn, SimpleSession& _data, std::vector<Header*>& _recvMessage, std::vector<SOCKET> _disconnectList )
+{
+	uint64_t seek		= 0;
+	uint64_t currentSize = 0;
+	int readcount = recv( _newConn, _data.buffer + _data.lastLength, DEFAULT_SOCKET_BUFFER_LENGTH - _data.lastLength, 0 );
+	if( -1 == readcount )
+	{
+		_disconnectList.push_back( _newConn );
+		return;
+	}
+	if( 0 == readcount )
+	{
+		return;
+	}
+	
+	currentSize = _data.lastLength + readcount;
+
+	if( currentSize < sizeof( Header ) )
+		return;
+
+	while( 0 != currentSize )
+	{
+		if( currentSize < sizeof( Header ) )
+			break;
+
+		char* currPtr = _data.buffer + seek;
+		uint64_t type = 0;
+		Header* m_header = ( Header* )currPtr;
+
+		switch( m_header->type )
+		{
+			case 1:
+			{
+				if( currentSize < sizeof( SessionKey ) )
+					break;
+				SessionKey* parseData = ( SessionKey* )currPtr;
+				_data.sesssionKey = parseData->sessionKey;
+
+				seek = seek + parseData->length;
+				currentSize = currentSize - parseData->length;
+			}
+			break;
+			case 2:
+				_disconnectList.push_back( _newConn );
+				break;
+			case 100:
+			{
+				if( currentSize < sizeof( TestBuffer ) )
+					break;
+
+				TestBuffer* parseData = ( TestBuffer* )currPtr;
+
+				seek = seek + parseData->length;
+				currentSize = currentSize - parseData->length;
+
+				fn_printTime();
+				printf( "%s \n", parseData->buffer );
+			}
+			case 1000:
+			{
+				if( currentSize < sizeof( ChatBuffer ) )
+					break;
+
+				ChatBuffer* parseData = new ChatBuffer();
+				memcpy( parseData, currPtr, sizeof( ChatBuffer ) );
+
+				seek = seek + parseData->length;
+				currentSize = currentSize - parseData->length;
+
+				fn_printTime();
+				printf( "%s \n", parseData->buffer );
+				_recvMessage.push_back( parseData );
+			}
+			break;
+			default:
+				Util::PrintMem( currPtr, sizeof( Header ) );
+				printf( "!!! Packet Parsing Failure !!! [type : %lld] \n", m_header->type );
+				break;
+		}
+	}
+
+	printf( "BufferSize %lld \n", currentSize );
+	if( 0 != currentSize )
+	{
+		memcpy( _data.buffer, _data.buffer + seek, currentSize );
+		_data.lastLength = currentSize;
+	}
+}
+
+void fn_process_recv( const fd_set& _set, std::vector<Header*>& _recvMessage, std::unordered_map<SOCKET, SimpleSession>& _sockList, fd_set& _originset, const SOCKET _CreateTarget )
+{
+	std::vector<SOCKET> removeList;
+	for( uint64_t count = 0; _set.fd_count > count; ++count )
+	{
+		SOCKET currSock = _set.fd_array[ count ];
+
+		if( FD_ISSET( currSock, &_set ) )
+		{
+			if( currSock == _CreateTarget )
+			{
+				fn_create( currSock, _originset, _sockList );
+			}
+			else
+			{
+				fn_parse( currSock, _sockList[ currSock ], _recvMessage, removeList );
+			}
+		}
+	}
+
+	for( SOCKET del : removeList )
+	{
+		_sockList.erase( del );
+	}
+}
+
+void fn_broadCast( const std::unordered_map<SOCKET, SimpleSession>& _sockList, std::vector<Header*>& _recvMessage )
+{
+	std::unordered_map<SOCKET, SimpleSession>::const_iterator end = _sockList.end();
+	for( std::unordered_map<SOCKET, SimpleSession>::const_iterator iter = _sockList.begin(); end != iter; ++iter )
+	{
+		for( Header*& sendData : _recvMessage )
+			send( iter->first, ( char* )sendData, sendData->length, 0 );
+	}
+}
+
+//================================================================================================================================================================
+
 int main()
 {
 	try
 	{
 
-		uint64_t m_bufferSize = 0;
-
-		uint64_t m_currentpacketSize = 0;
-
-		WSADATA m_data = {};
-		SOCKET m_socket = INVALID_SOCKET;
+		uint64_t									m_bufferSize		= 0;
+		uint64_t									m_currentpacketSize = 0;
+		WSADATA										m_data				= {};
+		SOCKET										m_socket			= INVALID_SOCKET;
+		std::unordered_map<SOCKET, SimpleSession>	bindMap				= {};
+		std::unordered_map<SOCKET, SimpleSession>	broadCastList		= {};
 
 		int result = WSAStartup( MAKEWORD( 2, 2 ), &m_data );
 		if( S_OK != result )
@@ -365,18 +629,35 @@ int main()
 		//	DoClassCode_Second();
 		//================================================================================================================================================================
 		// 
-		// 자체 소켓 규약.
-		// 최초에 Port를 정하고나면 뒤로 10개까지는 Reserve입니다.
-		// 10개 단위로 끊어주세요
+		//// 자체 소켓 규약.
+		//// 최초에 Port를 정하고나면 뒤로 10개까지는 Reserve입니다.
+		//// 10개 단위로 끊어주세요
+		//
+		//// DoClassCode_Second와 내용은 같지만
+		//// 클래스 스팩이 바뀌고 나서의 작업입니다.
+		//TestServer_Chat selectServer( 50000 );
+		//selectServer.Ready();
+		//
+		//while( 1 )
+		//{
+		//	selectServer.Update();
+		//}
+		//
+		//================================================================================================================================================================
 
-		// DoClassCode_Second와 내용은 같지만
-		// 클래스 스팩이 바뀌고 나서의 작업입니다.
-		TestServer_Chat selectServer( 50000 );
-		selectServer.Ready();
+		//================================================================================================================================================================
+
+		std::vector<Header*> recvList;
+
+		fn_process_recv( fn_select( fn_ready( fn_bind( sock_bind, Setaddr(port_bind, listenIn_bind ) ),  fd_bind ), fd_temp ), recvList, bindMap, fd_bind, sock_bind );
+		fn_process_recv( fn_select( fn_ready( fn_bind( sock_broadCast, Setaddr( port_broadCast, listenIn_broadCast ) ), fd_broadCast ), fd_temp ), recvList, broadCastList, fd_broadCast, sock_broadCast );
+		fn_broadCast( broadCastList, recvList );
 
 		while( 1 )
 		{
-			selectServer.Update();
+			fn_process_recv( fn_select( fd_bind, fd_temp ), recvList, bindMap, fd_bind, sock_bind );
+			fn_process_recv( fn_select( fd_broadCast, fd_temp ), recvList, broadCastList, fd_broadCast, sock_broadCast );
+			fn_broadCast( broadCastList, recvList );
 		}
 
 		//================================================================================================================================================================
@@ -388,7 +669,7 @@ int main()
 	catch( ... )
 	{
 		// 크래시하면 죽어버리고, 바로 죽는게 억지로 살리는 것 보단 낫겠지만... 적어도 뭔 일이 벌어졌는지는 볼 수 있도록 합니다.
-		
+
 		TCHAR* message = nullptr;
 		FormatMessage( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
 					   nullptr,
@@ -398,7 +679,7 @@ int main()
 					   0,
 					   nullptr );
 
-		wprintf( L" LastError String : %s", message);
+		wprintf( L" LastError String : %s", message );
 		LocalFree( message );
 	}
 }

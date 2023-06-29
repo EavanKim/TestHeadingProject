@@ -1,8 +1,9 @@
 #include "psudoPCH.h"
 
-CSocket_Listen::CSocket_Listen( uint16_t _port )
+CSocket_Listen::CSocket_Listen( uint64_t _ndfnum, uint16_t _port )
 	: CSocket( "", "" ) // Listen 상태에선 아이피 정보가 없습니다. Any로 Bind되기 때문입니다.
 	, m_listenPort( _port )
+	, m_ndfnum( _ndfnum )
 {
 
 }
@@ -113,7 +114,7 @@ void CSocket_Listen::Select( std::vector<CMessage>& _receiveDatas )
 	tv.tv_sec = 5;
 	tv.tv_usec = 0;
 	fd_set tempfds = m_readfds;
-	uint64_t fd_num = select( 0, &tempfds, NULL, NULL, &tv1 );
+	uint64_t fd_num = select( m_ndfnum, &tempfds, NULL, NULL, &tv1 );
 
 	if( 0 != fd_num )
 	{

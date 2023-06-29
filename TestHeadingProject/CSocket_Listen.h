@@ -2,7 +2,7 @@
 class CSocket_Listen : public CSocket
 {
 public:
-	CSocket_Listen( uint16_t _port );
+	CSocket_Listen( uint64_t _ndfnum, uint16_t _port );
 	virtual ~CSocket_Listen();
 
 
@@ -21,7 +21,7 @@ protected:
 private:
 	void CreateNewSession();
 	bool ListenBind();
-
+	uint64_t m_ndfnum = 0;
 	uint16_t m_listenPort = 0;
 	sockaddr_in m_listenIn = {};
 	sockaddr_in m_acceptIn = {};
