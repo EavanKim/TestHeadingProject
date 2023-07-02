@@ -28,9 +28,9 @@
 #include "SimpleLock_Win.h"
 
 #include "PrintLog.h"
+#include "CNet_Buffer.h"
 
 #include "CMessage_BroadCast.h"
-
 class CSession;
 #include "CSocket.h"
 #include "CSocket_Listen.h"

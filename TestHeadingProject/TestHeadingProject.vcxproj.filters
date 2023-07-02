@@ -45,6 +45,9 @@
     <ClCompile Include="TestServer_Chat.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="CNet_Buffer.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TestSock.h">
@@ -84,6 +87,9 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="TestServer_Chat.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="CNet_Buffer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

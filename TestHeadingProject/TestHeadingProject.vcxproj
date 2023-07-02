@@ -105,6 +105,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <ExceptionHandling>Sync</ExceptionHandling>
+      <AdditionalIncludeDirectories>$(ProjectDir)Util;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -128,6 +129,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CNet_Buffer.cpp" />
     <ClCompile Include="CPacketParser.cpp" />
     <ClCompile Include="CSession.cpp" />
     <ClCompile Include="CSocket.cpp" />
@@ -141,6 +143,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CMessage_BroadCast.h" />
+    <ClInclude Include="CNet_Buffer.h" />
     <ClInclude Include="CPacketParser.h" />
     <ClInclude Include="CSession.h" />
     <ClInclude Include="CSocket.h" />
