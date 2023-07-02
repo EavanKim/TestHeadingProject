@@ -502,6 +502,11 @@ void fn_parse( const SOCKET _newConn, SimpleSession& _data, std::vector<Header*>
 			_disconnectList.push_back( _newConn );
 			return;
 		}
+		if( 0 == readcount )
+		{
+			_data.m_buffer.get_data( &_recvMessage );
+			return;
+		}
 
 		_data.m_buffer.commit( readcount );
 		_data.m_buffer.get_data( &_recvMessage );
