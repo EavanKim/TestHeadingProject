@@ -547,6 +547,11 @@ void fn_broadCast( const std::unordered_map<SOCKET, SimpleSession>& _sockList, s
 		for( Header*& sendData : _recvMessage )
 			send( iter->first, ( char* )sendData, sendData->length, 0 );
 	}
+
+	for( Header*& sendData : _recvMessage )
+		delete sendData;
+
+	_recvMessage.clear();
 }
 
 //================================================================================================================================================================

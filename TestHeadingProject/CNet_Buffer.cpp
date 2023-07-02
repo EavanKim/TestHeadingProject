@@ -29,6 +29,7 @@ CNet_Buffer::~CNet_Buffer()
 
 void CNet_Buffer::commit( uint64_t _length )
 {
+	printf( "commit length : %lld \n", _length );
 	m_dataSize += _length;
 	m_seek = 0;
 }
@@ -45,6 +46,7 @@ bool CNet_Buffer::get_buffer( char** _buffer, uint64_t* _length )
 
 		*_length = DEFAULT_SOCKET_BUFFER_LENGTH - m_dataSize;
 		*_buffer = m_data + m_dataSize;
+		printf( "return length : %lld / [%llX / %llX] \n", _length, m_data, *_buffer );
 		return true;
 	}
 
