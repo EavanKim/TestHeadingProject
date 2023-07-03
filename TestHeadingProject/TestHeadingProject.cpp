@@ -359,8 +359,9 @@ struct SimpleSession
 	{
 	}
 
-	uint64_t		m_sesssionKey	= 0;
-	CNet_Buffer		m_buffer;
+	uint64_t				m_sesssionKey	= 0;
+	CNet_Buffer				m_buffer		= {};
+	std::vector<Header*>	m_sendBuffer	= {};
 };
 
 struct SimpleSocket
@@ -378,6 +379,8 @@ sockaddr_in			listenIn_broadCast	= {};
 fd_set				fd_bind				= {};
 fd_set				fd_broadCast		= {};
 fd_set				fd_temp				= {};
+fd_set				fd_temp_R			= {};
+fd_set				fd_temp_W			= {};
 std::vector<SOCKET> clients_bind		= {};
 std::vector<SOCKET> clients_broadCast	= {};
 
@@ -462,19 +465,36 @@ void fn_ready( SOCKET _bind, fd_set& _inSet )
 	FD_SET( _bind, &_inSet );
 }
 
-void fn_select( const fd_set& _readfds, fd_set& _temp )
+uint64_t fn_select( const fd_set& _readfds, fd_set& _temp, SOCKET& _sock )
 {
 	_temp = _readfds;
-	uint64_t fd_num = select( 0, &_temp, NULL, NULL, NULL );
+	return select( _sock + 1, &_temp, NULL, NULL, NULL );
 }
 
-void fn_select_passThrough( const fd_set& _readfds, fd_set& _temp, uint32_t _wait = 5 )
+uint64_t fn_select_passThrough( const fd_set& _readfds, fd_set& _temp, SOCKET& _sock, uint32_t _wait = 5 )
 {
 	struct timeval tv;
 	tv.tv_sec = _wait;
 	tv.tv_usec = 0;
 	_temp = _readfds;
-	uint64_t fd_num = select( 0, &_temp, NULL, NULL, &tv );
+	return  select( _sock + 1, &_temp, NULL, NULL, &tv );
+}
+
+uint64_t fn_select_send_passThrough( const fd_set& _write, fd_set& _temp, SOCKET& _sock, uint32_t _wait = 5 )
+{
+	struct timeval tv;
+	tv.tv_sec = _wait;
+	tv.tv_usec = 0;
+	_temp = _write;
+	return select( _sock + 1, NULL, &_temp, NULL, &tv );
+}
+
+uint64_t fn_select_complex_passThrough( fd_set& _temp_R, fd_set& _temp_W, SOCKET& _sock, uint32_t _wait = 5 )
+{
+	struct timeval tv;
+	tv.tv_sec = _wait;
+	tv.tv_usec = 0;
+	return select( _sock + 1, &_temp_R, &_temp_W, NULL, &tv );
 }
 
 void fn_create(const SOCKET _newConn, fd_set& _set, std::unordered_map<SOCKET, SimpleSession>& _sockList)
@@ -499,6 +519,7 @@ void fn_parse( const SOCKET _newConn, SimpleSession& _data, std::vector<Header*>
 		int readcount = recv( _newConn, data, length, 0 );
 		if( -1 == readcount )
 		{
+			printf( "Disconnect : %i", _data.m_sesssionKey );
 			_disconnectList.push_back( _newConn );
 			return;
 		}
@@ -539,13 +560,72 @@ void fn_process_recv( const fd_set& _set, std::vector<Header*>& _recvMessage, st
 	}
 }
 
-void fn_broadCast( const std::unordered_map<SOCKET, SimpleSession>& _sockList, std::vector<Header*>& _recvMessage )
+void fn_process_send( const fd_set& _set, std::unordered_map<SOCKET, SimpleSession>& _sockMap, fd_set& _originset, const SOCKET _CreateTarget )
 {
-	std::unordered_map<SOCKET, SimpleSession>::const_iterator end = _sockList.end();
-	for( std::unordered_map<SOCKET, SimpleSession>::const_iterator iter = _sockList.begin(); end != iter; ++iter )
+	Ping temp_ping;
+	std::vector<SOCKET> removeList;
+	for( uint64_t count = 0; _set.fd_count > count; ++count )
 	{
+		SOCKET currSock = _set.fd_array[ count ];
+
+		if( FD_ISSET( currSock, &_set ) )
+		{
+			std::unordered_map<SOCKET, SimpleSession>::iterator session = _sockMap.find( currSock );
+			if( 0 != session->second.m_sendBuffer.size() )
+			{
+				for( Header* header : session->second.m_sendBuffer )
+				{
+					int Result = send( currSock, ( char* )header, header->length, 0 );
+					if( -1 == Result )
+					{
+						removeList.push_back( currSock );
+						continue;
+					}
+
+					delete header;
+				}
+
+				session->second.m_sendBuffer.clear();
+			}
+			else
+			{
+				int Result = send( currSock, ( char* )&temp_ping, temp_ping.length, 0 );
+				if( -1 == Result )
+				{
+					removeList.push_back( currSock );
+					continue;
+				}
+			}
+		}
+	}
+
+	for( SOCKET del : removeList )
+	{
+		_sockMap.erase( del );
+	}
+}
+
+void fn_broadCast( std::unordered_map<SOCKET, SimpleSession>& _sockList, std::vector<Header*>& _recvMessage )
+{
+	std::unordered_map<SOCKET, SimpleSession>::iterator end = _sockList.end();
+	for( std::unordered_map<SOCKET, SimpleSession>::iterator iter = _sockList.begin(); end != iter; ++iter )
+	{
+		SimpleSession& session = iter->second;
 		for( Header*& sendData : _recvMessage )
-			send( iter->first, ( char* )sendData, sendData->length, 0 );
+		{
+			Header* newData = nullptr;
+
+			switch( sendData->type )
+			{
+				case 1000:
+					newData = new ChatBuffer();
+					memcpy( newData, sendData, sendData->length );
+					break;
+			}
+
+			if( nullptr != newData )
+				session.m_sendBuffer.push_back( newData );
+		}
 	}
 
 	for( Header*& sendData : _recvMessage )
@@ -628,10 +708,18 @@ int main()
 
 		while( processLive )
 		{
-			fn_select_passThrough(fd_bind, fd_temp, 1 );
+			fn_select_passThrough( fd_bind, fd_temp, sock_bind, 1 );
 			fn_process_recv( fd_temp, recvList, bindMap, fd_bind, sock_bind );
-			fn_select_passThrough( fd_broadCast, fd_temp, 1 );
+
+			fn_select_passThrough( fd_broadCast, fd_temp, sock_broadCast, 1 );
 			fn_process_recv( fd_temp, recvList, broadCastMap, fd_broadCast, sock_broadCast );
+
+			fn_select_send_passThrough( fd_broadCast, fd_temp, sock_broadCast, 1 );
+			fn_process_send( fd_temp, broadCastMap, fd_broadCast, sock_broadCast );
+
+			//fn_select_complex_passThrough( fd_temp_R, fd_temp_W, sock_broadCast, 1 );
+			//fn_process_recv( fd_temp_R, recvList, broadCastMap, fd_broadCast, sock_broadCast );
+			//fn_process_send( fd_temp_W, recvList, broadCastMap, fd_broadCast, sock_broadCast );
 
 			fn_broadCast( broadCastMap, recvList );
 		}

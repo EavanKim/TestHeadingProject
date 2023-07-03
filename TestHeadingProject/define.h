@@ -34,6 +34,7 @@ struct SendStruct : public Header
 
 typedef SendStruct<1, 1> SessionKey;
 typedef SendStruct<2, 1> Shutdown;
+typedef SendStruct<3, 1> Ping;
 typedef SendStruct<100, 43> TestBuffer;
 typedef SendStruct<1000, 1000> ChatBuffer;
 #pragma pack(pop)
