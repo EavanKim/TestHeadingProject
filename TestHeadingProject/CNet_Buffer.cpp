@@ -46,7 +46,7 @@ bool CNet_Buffer::get_buffer( char** _buffer, uint64_t* _length )
 
 		*_length = DEFAULT_SOCKET_BUFFER_LENGTH - m_dataSize;
 		*_buffer = m_data + m_dataSize;
-		printf( "return length : %lld / [%llX / %llX] \n", _length, m_data, *_buffer );
+		printf( "return length : %lld / [%llX / %llX] \n", *_length, m_data, *_buffer );
 		return true;
 	}
 
@@ -70,6 +70,9 @@ Header* CNet_Buffer::get_data()
 				case 2:
 					result = new Shutdown();
 					break;
+				case 3:
+					result = new Ping();
+					break;
 				case 100:
 					result = new TestBuffer();
 					break;
@@ -82,7 +85,7 @@ Header* CNet_Buffer::get_data()
 
 	if( nullptr != result )
 	{
-		memcpy_s( result, result->length, m_data, result->length );
+		memcpy_s( result, result->length, m_data + m_seek, result->length );
 		m_seek += result->length;
 		m_dataSize -= result->length;
 	}

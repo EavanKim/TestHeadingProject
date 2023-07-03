@@ -359,6 +359,15 @@ struct SimpleSession
 	{
 	}
 
+	~SimpleSession()
+	{
+		for( Header* pending : m_sendBuffer )
+		{
+			delete pending;
+		}
+		m_sendBuffer.clear();
+	}
+
 	uint64_t				m_sesssionKey	= 0;
 	CNet_Buffer				m_buffer		= {};
 	std::vector<Header*>	m_sendBuffer	= {};
@@ -534,7 +543,7 @@ void fn_parse( const SOCKET _newConn, SimpleSession& _data, std::vector<Header*>
 	}
 }
 
-void fn_process_recv( const fd_set& _set, std::vector<Header*>& _recvMessage, std::unordered_map<SOCKET, SimpleSession>& _sockList, fd_set& _originset, const SOCKET _CreateTarget )
+void fn_process_recv( fd_set& _set, std::vector<Header*>& _recvMessage, std::unordered_map<SOCKET, SimpleSession>& _sockList, fd_set& _originset, const SOCKET _CreateTarget )
 {
 	std::vector<SOCKET> removeList;
 	for( uint64_t count = 0; _set.fd_count > count; ++count )
@@ -556,6 +565,8 @@ void fn_process_recv( const fd_set& _set, std::vector<Header*>& _recvMessage, st
 
 	for( SOCKET del : removeList )
 	{
+		FD_CLR( del, &_set );
+		closesocket(del);
 		_sockList.erase( del );
 	}
 }
@@ -581,26 +592,21 @@ void fn_process_send( const fd_set& _set, std::unordered_map<SOCKET, SimpleSessi
 						removeList.push_back( currSock );
 						continue;
 					}
+					
+					printf( "send length : %lld  / data : %s", header->length, ( ( ChatBuffer* )header )->buffer );
 
 					delete header;
 				}
 
 				session->second.m_sendBuffer.clear();
 			}
-			else
-			{
-				int Result = send( currSock, ( char* )&temp_ping, temp_ping.length, 0 );
-				if( -1 == Result )
-				{
-					removeList.push_back( currSock );
-					continue;
-				}
-			}
 		}
 	}
 
 	for( SOCKET del : removeList )
 	{
+		FD_CLR( del, &_set );
+		closesocket( del );
 		_sockMap.erase( del );
 	}
 }
