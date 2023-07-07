@@ -1,3 +1,3 @@
-[submodule "HeadingNetLib"]
-	path = HeadingNetLib
+[submodule "HeadingNet"]
+	path = HeadingNet
 	url = https://github.com/EavanKim/HeadingNetLib.git
