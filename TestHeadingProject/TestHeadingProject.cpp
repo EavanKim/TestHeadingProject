@@ -1,8 +1,9 @@
-﻿#include "psudoPCH.h"
+﻿
+#include "psudoPCH.h"
 
 int main()
 {
-	WSAData Data;
+	WSAData Data = {};
 	Heading::start( Data );
 
 	//===================================================================================================================================================================
@@ -15,8 +16,8 @@ int main()
 		Heading::bindingInfo mainServer;
 		Heading::bindingInfo broadCastServer;
 
-		ZeroMemory( &mainServer, sizeof( Heading::bindingInfo ) );
-		ZeroMemory( &broadCastServer, sizeof( Heading::bindingInfo ) );
+		mainServer.port = 50000;
+		broadCastServer.port = 51000;
 
 		Heading::createInfo( mainServer );
 		Heading::createInfo( broadCastServer );
@@ -33,6 +34,9 @@ int main()
 			Heading::recv( broadCastServer );
 			Heading::send( broadCastServer );
 		}
+
+		Heading::release( mainServer );
+		Heading::release( broadCastServer );
 
 		//================================================================================================================================================================
 	}
