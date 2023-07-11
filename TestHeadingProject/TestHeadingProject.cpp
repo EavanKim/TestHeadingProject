@@ -59,17 +59,20 @@ int main()
 		//================================================================================================================================================================
 		
 		Heading::CAccepter main;
+		Heading::CChatter chat;
 
 		main.Set_NewAcceptPort( 50000 );
+		main.Set_NewAcceptPort( 51000 );
 
 		while( IsServerLive )
 		{
-			Heading::SocketList socketlist;
-			main.Do_Select();
-			if(main.Get_NewSocket(socketlist))
+			Heading::NewSocketList socketlist;
+			main.Do_Select( );
+			if( main.Get_NewSocket( socketlist ) )
 			{
 				// 새 연결이 생기면 Client Session 처리
 			}
+
 		}
 
 		//================================================================================================================================================================
