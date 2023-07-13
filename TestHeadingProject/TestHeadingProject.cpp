@@ -58,7 +58,7 @@ int main()
 
 		//================================================================================================================================================================
 		
-		Heading::CAccepter main;
+		Heading::CAccept_Mgr main;
 		Heading::CChatter chat;
 
 		main.Set_NewAcceptPort( 50000 );
