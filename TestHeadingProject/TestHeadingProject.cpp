@@ -6,57 +6,9 @@ int main()
 	WSAData Data = {};
 	Heading::start( Data );
 
-	//===================================================================================================================================================================
-
 	try
 	{
 		bool IsServerLive = true;
-		//================================================================================================================================================================
-
-		//Heading::bindingInfo mainServer;
-		//Heading::bindingInfo broadCastServer;
-
-		//mainServer.port = 50000;
-		//broadCastServer.port = 51000;
-
-		//Heading::createInfo( mainServer );
-		//Heading::createInfo( broadCastServer );
-
-		//Heading::bind( mainServer );
-		//Heading::bind( broadCastServer );
-
-		//while( IsServerLive )
-		//{
-		//	Heading::aSelect_Read( mainServer );
-		//	Heading::aSelect_RW( broadCastServer );
-
-		//	Heading::recv( mainServer );
-		//	Heading::recv( broadCastServer );
-		//	Heading::send( broadCastServer );
-		//}
-
-		//Heading::release( mainServer );
-		//Heading::release( broadCastServer );
-
-		//================================================================================================================================================================
-
-		//Heading::CEventSelect mainSelect(50000);
-		//Heading::CEventSelect broadCastSelect(51000);
-
-		//mainSelect.SetupAddrInfo();
-		//broadCastSelect.SetupAddrInfo();
-
-		//mainSelect.bind();
-		//broadCastSelect.bind();
-
-		//while( IsServerLive )
-		//{
-		//	mainSelect.Do_Select();
-		//	broadCastSelect.Do_Select();
-		//}
-
-
-		//================================================================================================================================================================
 		
 		Heading::CAccept_Mgr main;
 		Heading::CChatter chat;
@@ -78,8 +30,6 @@ int main()
 			chat.Do_Select( );
 			broadCaster.Do_Select( );
 		}
-
-		//================================================================================================================================================================
 	}
 	catch( ... )
 	{
@@ -97,8 +47,6 @@ int main()
 		wprintf( L" LastError String : %s", message );
 		LocalFree( message );
 	}
-	
-	//===================================================================================================================================================================
 
 	Heading::end();
 }
