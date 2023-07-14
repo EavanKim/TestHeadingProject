@@ -12,10 +12,8 @@ int main()
 		
 		Heading::CAccept_Mgr main;
 		Heading::CChatter chat;
-		Heading::CBroadCaster broadCaster;
 
 		main.Set_NewAcceptPort( 50000 );
-		main.Set_NewAcceptPort( 51000 );
 
 		while( IsServerLive )
 		{
@@ -25,10 +23,8 @@ int main()
 			{
 				// 새 연결이 생기면 Client Session 처리
 				chat.Set_NewSession( socketlist );
-				broadCaster.Set_NewSession( socketlist );
 			}
 			chat.Do_Select( );
-			broadCaster.Do_Select( );
 		}
 	}
 	catch( ... )
