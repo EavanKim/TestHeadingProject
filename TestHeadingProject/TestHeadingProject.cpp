@@ -1,5 +1,6 @@
 ﻿
 #include "psudoPCH.h"
+#include "TestHeadingProject.h"
 
 int main()
 {
@@ -25,6 +26,7 @@ int main()
 				chat.Set_NewSession( socketlist );
 			}
 			chat.Do_Select( );
+			chat.Do_PostProcess( );
 		}
 	}
 	catch( ... )
