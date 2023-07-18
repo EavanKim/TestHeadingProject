@@ -25,6 +25,8 @@ int main()
 				// 새 연결이 생기면 Client Session 처리
 				chat.Set_NewSession( socketlist );
 			}
+
+			// 무조건 Select 1회에 1개 소켓이 처리된다고 생각하고 돌리기.
 			chat.Do_Select( );
 			chat.Do_PostProcess( );
 		}
