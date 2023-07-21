@@ -3,7 +3,7 @@
 
 int main()
 {
-	Heading::SimpleServerKit::Manager::Init();
+	Heading::SimpleServerKit::Manager::Init( 2 );
 
 	try
 	{
