@@ -3,7 +3,15 @@
 
 int main()
 {
-	Heading::SimpleServerKit::Manager::Init( 2 );
+	Heading::SimpleServerKit::E_LOG_LEVEL currentLogLevel = Heading::SimpleServerKit::E_LOG_LEVEL::E_LOG_LEVEL_NONE;
+
+#if _DEBUG
+	currentLogLevel = Heading::SimpleServerKit::E_LOG_LEVEL::E_LOG_LEVEL_DEBUG;
+#else
+	currentLogLevel = Heading::SimpleServerKit::E_LOG_LEVEL::E_LOG_LEVEL_RELEASE;
+#endif
+
+	Heading::SimpleServerKit::Manager::Init( currentLogLevel , 2 );
 
 	try
 	{
