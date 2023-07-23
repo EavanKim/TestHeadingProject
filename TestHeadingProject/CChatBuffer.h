@@ -1,28 +1,25 @@
 #pragma once
 
-namespace Heading
+struct CChatData
 {
-	struct CChatData
+	CChatData( uint64_t evt, Heading::Header* _buf )
+		: event( evt )
+		, buffer( _buf )
 	{
-		CChatData(uint64_t evt, Header* _buf)
-			: event(evt)
-			, buffer(_buf)
-		{
-		}
+	}
 
-		uint64_t event;
-		Header* buffer;
-	};
+	uint64_t event;
+	Heading::Header* buffer;
+};
 
-	class CChatBuffer
-	{
-	public:
-		void InsertDatas( uint64_t _key, Header* _data );
-		void GetDatas( uint64_t _key, std::vector<Header*>& _datas );
-		void Clear( );
+class CChatBuffer
+{
+public:
+	void InsertDatas( uint64_t _key, Heading::Header* _data );
+	void GetDatas( uint64_t _key, std::vector<Heading::Header*>& _datas );
+	void Clear( );
 
-	private:
-		std::vector<CChatData> m_data;
-	};
-}
+private:
+	std::vector<CChatData> m_data;
+};
 

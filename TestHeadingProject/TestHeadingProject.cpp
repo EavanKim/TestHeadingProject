@@ -2,21 +2,21 @@
 
 int main()
 {
-	Heading::SimpleServerKit::E_LOG_LEVEL currentLogLevel = Heading::SimpleServerKit::E_LOG_LEVEL::E_LOG_LEVEL_NONE;
+	E_LOG_LEVEL currentLogLevel = E_LOG_LEVEL::E_LOG_LEVEL_NONE;
 
 #if _DEBUG
-	currentLogLevel = Heading::SimpleServerKit::E_LOG_LEVEL::E_LOG_LEVEL_DEBUG;
+	currentLogLevel = E_LOG_LEVEL::E_LOG_LEVEL_DEBUG;
 #else
-	currentLogLevel = Heading::SimpleServerKit::E_LOG_LEVEL::E_LOG_LEVEL_RELEASE;
+	currentLogLevel = E_LOG_LEVEL::E_LOG_LEVEL_RELEASE;
 #endif
 
-	Heading::SimpleServerKit::Manager::Init( currentLogLevel , 2 );
+	Manager::Init( currentLogLevel , 2 );
 
 	try
 	{
-		Heading::SimpleServerKit::Manager::Get()->Start(50000);
+		Manager::Get()->Start(50000);
 
-		Heading::SimpleServerKit::Manager::Get()->Update();
+		Manager::Get()->Update();
 	}
 	catch( ... )
 	{
@@ -33,5 +33,5 @@ int main()
 		LocalFree( message );
 	}
 
-	Heading::SimpleServerKit::Manager::Get()->Dispose();
+	Manager::Get()->Dispose();
 }

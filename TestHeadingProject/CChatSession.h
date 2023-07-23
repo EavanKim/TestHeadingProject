@@ -1,14 +1,12 @@
 #pragma once
 
-namespace Heading
+class CChatSession : public Heading::CClientSession
 {
-	class CChatSession : public CClientSession
-	{
-	public:
-		CChatSession( SOCKET _sock );
-		virtual ~CChatSession();
-		
-		virtual void Update( ) override;
-	};
-}
+public:
+	CChatSession( SOCKET _sock );
+	virtual ~CChatSession( );
+
+	virtual void Update( ) override;
+};
+
 
