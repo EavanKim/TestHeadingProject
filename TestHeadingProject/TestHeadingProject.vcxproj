@@ -72,6 +72,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)..\$(Platform)\$(Configuration)\</OutDir>
+    <IncludePath>$(ProjectDir)Inc;$(IncludePath)</IncludePath>
+    <SourcePath>$(ProjectDir)Src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)..\$(Platform)\$(Configuration)\</OutDir>
@@ -141,20 +143,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CChatBuffer.cpp" />
-    <ClCompile Include="CChatHandler.cpp" />
-    <ClCompile Include="CChatSession.cpp" />
-    <ClCompile Include="CChatter.cpp" />
-    <ClCompile Include="Manager.cpp" />
+    <ClCompile Include="Src\CChatBuffer.cpp" />
+    <ClCompile Include="Src\CChatHandler.cpp" />
+    <ClCompile Include="Src\CChatSession.cpp" />
+    <ClCompile Include="Src\CChatter.cpp" />
+    <ClCompile Include="Src\Manager.cpp" />
     <ClCompile Include="TestHeadingProject.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CChatBuffer.h" />
-    <ClInclude Include="CChatHandler.h" />
-    <ClInclude Include="CChatSession.h" />
-    <ClInclude Include="CChatter.h" />
-    <ClInclude Include="Manager.h" />
-    <ClInclude Include="psudoPCH.h" />
+    <ClInclude Include="Inc\CChatBuffer.h" />
+    <ClInclude Include="Inc\CChatHandler.h" />
+    <ClInclude Include="Inc\CChatSession.h" />
+    <ClInclude Include="Inc\CChatter.h" />
+    <ClInclude Include="Inc\Manager.h" />
+    <ClInclude Include="Inc\psudoPCH.h" />
     <ClInclude Include="TestHeadingProject.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

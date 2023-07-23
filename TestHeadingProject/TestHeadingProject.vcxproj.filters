@@ -18,42 +18,42 @@
     <ClCompile Include="TestHeadingProject.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="CChatBuffer.cpp">
+    <ClCompile Include="Src\CChatBuffer.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="CChatHandler.cpp">
+    <ClCompile Include="Src\CChatHandler.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="CChatSession.cpp">
+    <ClCompile Include="Src\CChatSession.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="CChatter.cpp">
+    <ClCompile Include="Src\CChatter.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Manager.cpp">
+    <ClCompile Include="Src\Manager.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="psudoPCH.h">
+    <ClInclude Include="Inc\psudoPCH.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="TestHeadingProject.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="CChatBuffer.h">
+    <ClInclude Include="Inc\CChatBuffer.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="CChatHandler.h">
+    <ClInclude Include="Inc\CChatHandler.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="CChatSession.h">
+    <ClInclude Include="Inc\CChatSession.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="CChatter.h">
+    <ClInclude Include="Inc\CChatter.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Manager.h">
+    <ClInclude Include="Inc\Manager.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
