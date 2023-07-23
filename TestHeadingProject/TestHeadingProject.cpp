@@ -14,8 +14,8 @@ int main()
 
 	try
 	{
-		Manager::Get()->Start(50000);
-
+		//Manager::Get()->Start(50000);
+		Manager::Get()->ChattingStartUp( );
 		Manager::Get()->Update();
 	}
 	catch( ... )

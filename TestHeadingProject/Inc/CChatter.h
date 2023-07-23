@@ -11,13 +11,12 @@ public:
 	CChatter( );
 	virtual ~CChatter( );
 
-	virtual void Set_NewSession( Heading::NewSocketList& _newSocket ) override;
-
 	void Do_PostProcess( );
 
 private:
 
 	CChatBuffer m_chat;
+
 };
 
 

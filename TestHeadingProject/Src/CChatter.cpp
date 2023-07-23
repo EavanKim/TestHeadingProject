@@ -10,30 +10,6 @@ CChatter::~CChatter( )
 
 }
 
-void CChatter::Set_NewSession( Heading::NewSocketList& _newSocket )
-{
-	for( Heading::CreatedSocketInfo& info : _newSocket )
-	{
-		if( WSA_MAXIMUM_WAIT_EVENTS > m_size )
-		{
-			switch( info.AcceptPort )
-			{
-			case 50000:
-			{
-				Heading::CClientSession* newSession = new CChatSession( info.Sock );
-				newSession->CreateAndSetEvent( ( long ) ( FD_READ | FD_WRITE | FD_CLOSE ) );
-				m_events[ m_size ] = newSession->Get_Event( );
-				m_sessions.insert( std::make_pair( newSession->Get_Event( ), newSession ) );
-				++m_size;
-			}
-			break;
-			}
-		}
-		else
-			return;
-	}
-}
-
 
 void CChatter::Do_PostProcess( )
 {
