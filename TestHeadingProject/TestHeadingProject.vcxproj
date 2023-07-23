@@ -111,7 +111,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <ExceptionHandling>Sync</ExceptionHandling>
-      <AdditionalIncludeDirectories>$(ProjectDir)Util;$(ProjectDir)..\HeadingNet\HeadingNet;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Util;$(ProjectDir)..\HeadingNet\HeadingNet\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -141,9 +141,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CChatBuffer.cpp" />
+    <ClCompile Include="CChatHandler.cpp" />
+    <ClCompile Include="CChatSession.cpp" />
+    <ClCompile Include="CChatter.cpp" />
+    <ClCompile Include="Manager.cpp" />
     <ClCompile Include="TestHeadingProject.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CChatBuffer.h" />
+    <ClInclude Include="CChatHandler.h" />
+    <ClInclude Include="CChatSession.h" />
+    <ClInclude Include="CChatter.h" />
+    <ClInclude Include="Manager.h" />
     <ClInclude Include="psudoPCH.h" />
     <ClInclude Include="TestHeadingProject.h" />
   </ItemGroup>
