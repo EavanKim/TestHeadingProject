@@ -1,22 +1,35 @@
 #include "psudoPCH.h"
 
+// 서버가 ~~~를 한다
+enum E_SYSTEM_EVENTS
+{
+	E_SYSTEM_ACCEPT,
+	E_SYSTEM_SELECT,
+	E_SYSTEM_RECV,
+	E_SYSTEM_BROADCAST,
+	E_SYSTEM_MAX
+};
+
+// 패킷으로 ~~~를 한다
+enum E_PACKET_EVENTS
+{
+	E_PACKET_CHATTING,
+	E_PACKET_WISPERING,
+	E_PACKET_ENTER,
+	E_PACKET_EXIT,
+	E_PACKET_MAX
+};
+
+int (*SystemEvents[E_SYSTEM_MAX])(void*);
+bool (*PacketEvents[E_PACKET_MAX])(void*);
+
 int main()
 {
-	E_LOG_LEVEL currentLogLevel = E_LOG_LEVEL::E_LOG_LEVEL_NONE;
 
-#if _DEBUG
-	currentLogLevel = E_LOG_LEVEL::E_LOG_LEVEL_DEBUG;
-#else
-	currentLogLevel = E_LOG_LEVEL::E_LOG_LEVEL_RELEASE;
-#endif
-
-	Manager::Init( currentLogLevel , 2 );
 
 	try
 	{
-		//Manager::Get()->Start(50000);
-		Manager::Get()->ChattingStartUp( );
-		Manager::Get()->Update();
+
 	}
 	catch( ... )
 	{
@@ -32,6 +45,4 @@ int main()
 		wprintf( L" LastError String : %s", message );
 		LocalFree( message );
 	}
-
-	Manager::Get()->Dispose();
 }

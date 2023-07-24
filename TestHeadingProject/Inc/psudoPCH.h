@@ -7,3 +7,4 @@
 #include "CChatter.h"
 #include "CChatHandler.h"
 #include "Manager.h"
+#include "EventManager.h"

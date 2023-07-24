@@ -2,10 +2,10 @@
 
 Manager* Manager::m_instance = nullptr;
 
-void Manager::Init( E_LOG_LEVEL _logLevel, uint64_t _selectThreadCount )
+void Manager::Init( E_LOG_LEVEL _logLevel )
 {
 	if( nullptr == m_instance )
-		m_instance = new Manager( _logLevel, _selectThreadCount );
+		m_instance = new Manager( _logLevel );
 }
 
 Manager* Manager::Get( )
@@ -30,61 +30,13 @@ void Manager::ChattingStartUp( )
 	m_acceptThreads.insert( std::make_pair( 50000, thread ) );
 }
 
-void Manager::Start( uint16_t _port )
-{
-	m_login.Set_NewAcceptPort( _port );
-}
-
-void Manager::End( uint16_t _port )
-{
-	m_login.Set_CloseAcceptPort( _port );
-}
-
 void Manager::Update( )
 {
-	while( m_processLive || !m_recvQueue.empty( ) )
+	while( m_processLive )
 	{
 		server_log_flush( );
 
-		while( !m_newSocketQueue.empty( ) )
-		{
-			Heading::CreatedSocketInfo info;
-			if( m_newSocketQueue.try_pop( info ) )
-			{
-				if( m_state_count.m_maximumSession <= m_state_count.m_currentSession )
-				{
-					// 이미 사이즈 초과
-					closesocket( info.Sock );
-				}
-				else
-				{
-					switch( info.AcceptPort )
-					{
-					case 50000:
-						// 순회하여
-						for( selectList::iterator iter = m_zone.begin( ); m_zone.end( ) != iter; ++iter )
-						{
-							// 비어있으면
-							if( (*iter)->Check_SessionCapacity( ) )
-							{
-								// 추가하고
-								if( (*iter)->Set_NewSession( new CChatSession( info.Sock ) ) )
-								{
-									++m_state_count.m_currentSession;
-									break;
-								}
-							}
-						}
-						// 세션 사이즈가 남았는데도 추가가 안된거라면 셀렉트를 더 만들어도 되므로
-						// 셀렉트째로 새로 만들어서 처리
-						CChatter* newSelecter = new CChatter( );
-						m_zone.push_back( newSelecter );
-						newSelecter->Set_NewSession( new CChatSession( info.Sock ) );
-						break;
-					}
-				}
-			}
-		}
+
 
 		for( selectList::iterator iter = m_zone.begin( ); m_zone.end( ) != iter; ++iter )
 		{
@@ -207,19 +159,12 @@ bool Manager::try_set_new_session( Heading::CreatedSocketInfo& _info )
 	}
 }
 
-Manager::Manager( E_LOG_LEVEL _logLevel, uint64_t _selectThreadCount )
+Manager::Manager( E_LOG_LEVEL _logLevel )
 	: m_logLevel( _logLevel )
 {
 	std::string str;
 	Heading::WSAErrorString( WSAStartup( MAKEWORD( 2, 2 ), &m_data ), str );
 	server_log( E_LOG_LEVEL::E_LOG_LEVEL_DEBUG, Heading::formatf( "Heading::string Error %s \n", str.c_str( ) ) );
-
-	m_state_count.m_acceptThread = 1;
-	m_state_count.m_selectThread = _selectThreadCount;
-
-	m_state_count.m_maximumSession = ( m_state_count.m_selectThread * 64 );
-
-	InterlockedExchange64( &m_managerWork, 1 );
 }
 
 Manager::~Manager( )

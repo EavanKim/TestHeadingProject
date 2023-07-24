@@ -143,6 +143,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="EventManager.cpp" />
     <ClCompile Include="Src\CChatBuffer.cpp" />
     <ClCompile Include="Src\CChatHandler.cpp" />
     <ClCompile Include="Src\CChatSession.cpp" />
@@ -151,6 +152,7 @@
     <ClCompile Include="TestHeadingProject.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="EventManager.h" />
     <ClInclude Include="Inc\CChatBuffer.h" />
     <ClInclude Include="Inc\CChatHandler.h" />
     <ClInclude Include="Inc\CChatSession.h" />

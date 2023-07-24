@@ -29,14 +29,11 @@ struct AcceptCommand
 class Manager
 {
 public:
-	static void Init( E_LOG_LEVEL _logLevel, uint64_t _selectThreadCount );
+	static void Init( E_LOG_LEVEL _logLevel );
 	static Manager* Get( );
 	void Dispose( );
 
 	void ChattingStartUp();
-
-	void Start( uint16_t _port );
-	void End( uint16_t _port );
 
 	void Update( );
 
@@ -52,7 +49,7 @@ public:
 	bool try_set_new_session( Heading::CreatedSocketInfo& _socket );
 
 private:
-	Manager( E_LOG_LEVEL _logLevel, uint64_t _selectThreadCount );
+	Manager( E_LOG_LEVEL _logLevel );
 	~Manager( );
 
 	static Manager* m_instance;
