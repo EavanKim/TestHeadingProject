@@ -2,6 +2,7 @@
 
 std::atomic<bool> CServer_App::m_live = true;
 WSADATA CServer_App::m_data = {};
+Heading::CAcceptThread* CServer_App::m_accept = nullptr;
 
 void CServer_App::InitializeApplication( )
 {
@@ -12,22 +13,35 @@ void CServer_App::InitializeApplication( )
 
 void CServer_App::ListenBinding( )
 {
-	EventManager::get()->AddBindPort( 50000 );
-}
+	// Thread 만들면서 바로 등록.
+	Heading::AcceptThreadInfo* info = new Heading::AcceptThreadInfo();
 
-void CServer_App::ClientAccepting( )
-{
+	info->port = 50000;
+	info->liveChecker = ServiceCheck;
+	info->onAccept = EventManager::onAccept;
 
+	// info는 안에서 잘 지우는 방향으로 처리.
+	// 지역성 있는 메모리는 스택 현황과 정리 상황에 따라 위험하므로 힙을 사용합니다.
+	m_accept = new Heading::CAcceptThread( info );
 }
 
 void CServer_App::SocketSelecting( )
 {
-
-}
-
-void CServer_App::PacketProcessing( )
-{
-
+	EventManager* evtMgr = EventManager::get();
+	if( nullptr != evtMgr )
+	{
+		if( 0 != evtMgr->GetEventSize( ) )
+		{
+			DWORD result = WSAWaitForMultipleEvents( evtMgr->GetEventSize( ), evtMgr->GetEventArray( ), FALSE, 0, FALSE );
+			switch( Heading::WaitObjectCheck( result ) )
+			{
+				// 나머지 에러 극복도 구현 해 보기
+			case Heading::E_WaitEvent_Result::E_Wait_OK:
+				evtMgr->onSelect( result );
+				return;
+			}
+		}
+	}
 }
 
 void CServer_App::EndProcessing( )

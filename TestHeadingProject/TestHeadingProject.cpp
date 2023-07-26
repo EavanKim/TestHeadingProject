@@ -9,11 +9,7 @@ int main()
 	{
 		while( CServer_App::ServiceCheck( ) )
 		{
-			CServer_App::ClientAccepting();
-
 			CServer_App::SocketSelecting();
-
-			CServer_App::PacketProcessing();
 		}
 	}
 	catch( ... )
