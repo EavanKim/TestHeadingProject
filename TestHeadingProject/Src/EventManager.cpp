@@ -63,7 +63,10 @@ void EventManager::onSelect( DWORD _eventIndex )
 		WSANETWORKEVENTS NetworkEvents;
 		int retval = WSAEnumNetworkEvents( current->Get_Sock(), current->Get_Event(), &NetworkEvents );
 		if( retval == SOCKET_ERROR )
+		{
+			Log( Heading::formatf("EventManager::onSelect Fail. EnumNetworkEvents returned SOCKET_ERROR %i", _eventIndex) );
 			return;
+		}
 
 		if( NetworkEvents.lNetworkEvents & FD_READ )
 		{
