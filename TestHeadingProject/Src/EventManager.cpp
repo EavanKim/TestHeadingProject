@@ -89,7 +89,7 @@ void EventManager::onSelect( DWORD _eventIndex )
 		{
 			m_sessions.erase( iter );
 			m_wsaEvents.Remove( currentEvent );
-			m_userData.remove( currentEvent );
+			m_userData.Remove( currentEvent );
 			delete current;
 			return;
 		}
@@ -149,7 +149,7 @@ void EventManager::onExit( IN Heading::CClientSession* _sessionInfo )
 	WSAEVENT targetEvent = _sessionInfo->Get_Event();
 	m_sessions.erase( targetEvent );
 	m_wsaEvents.Remove( targetEvent );
-	m_userData.remove( targetEvent );
+	m_userData.Remove( targetEvent );
 	delete _sessionInfo;
 }
 
