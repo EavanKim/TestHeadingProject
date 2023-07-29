@@ -66,9 +66,17 @@ void EventManager::SetAcceptSession( )
 		Heading::CClientSession* ptr = nullptr;
 		if( m_acceptedSocket.try_pop( ptr ) )
 		{
+			ptr->CreateAndSetEvent( FD_READ | FD_WRITE );
 			WSAEVENT newEvent = ptr->Get_Event( );
-			m_wsaEvents.Add( newEvent );
-			m_sessions.insert( std::make_pair( newEvent, ptr ) );
+			if( INVALID_HANDLE_VALUE != newEvent )
+			{
+				m_wsaEvents.Add( newEvent );
+				m_sessions.insert( std::make_pair( newEvent, ptr ) );
+			}
+			else
+			{
+				delete ptr;
+			}
 		}
 	}
 }
@@ -96,7 +104,15 @@ void EventManager::onSelect( DWORD _eventIndex )
 			{
 				return;
 			}
-			current->RecvData();
+			Heading::packetBuff buff; // local buffer니까 사라질거라고 보고 클리어 하지 않습니다.
+			current->RecvData( buff );
+
+			for( Heading::Header* packet : buff )
+			{
+				onRecv( current, packet );
+
+				delete packet;
+			}
 		}
 
 		if( NetworkEvents.lNetworkEvents & FD_WRITE )
@@ -124,33 +140,33 @@ void EventManager::onRecv( IN Heading::CClientSession* _sessionInfo, IN Heading:
 {
 	switch( _recvData->type )
 	{
-	case E_PCK_TYPE::PCK_CS_ENTER:
-	{
-		Heading::PCK_CS_Enter* parse = static_cast< Heading::PCK_CS_Enter* >( _recvData );
-		onEnter( _sessionInfo, parse );
-	}
-		break;
-	case E_PCK_TYPE::PCK_CS_EXIT:
-		onExit(_sessionInfo);
-		break;
-	case E_PCK_TYPE::PCK_CS_CHATTING:
-	{
-		Heading::PCK_CS_Chatting* parse = static_cast< Heading::PCK_CS_Chatting* >( _recvData );
-		onChatting( _sessionInfo, parse );
-	}
-		break;
-	case E_PCK_TYPE::PCK_CS_WISPERING:
-	{
-		Heading::PCK_CS_Wispering* parse = static_cast< Heading::PCK_CS_Wispering* >( _recvData );
-		onWispering( _sessionInfo, parse );
-	}
-		break;
-	case E_PCK_TYPE::PCK_CS_REQUESTPREVIOUS:
-	{
-		Heading::PCK_CS_RequestPrevious* parse = static_cast< Heading::PCK_CS_RequestPrevious* >( _recvData );
-		onRequestPrevious( _sessionInfo, parse );
-	}
-		break;
+		case E_PCK_TYPE::PCK_CS_ENTER:
+			{
+				Heading::PCK_CS_Enter* parse = static_cast< Heading::PCK_CS_Enter* >( _recvData );
+				onEnter( _sessionInfo, parse );
+			}
+			break;
+		case E_PCK_TYPE::PCK_CS_EXIT:
+			onExit( _sessionInfo );
+			break;
+		case E_PCK_TYPE::PCK_CS_CHATTING:
+			{
+				Heading::PCK_CS_Chatting* parse = static_cast< Heading::PCK_CS_Chatting* >( _recvData );
+				onChatting( _sessionInfo, parse );
+			}
+			break;
+		case E_PCK_TYPE::PCK_CS_WISPERING:
+			{
+				Heading::PCK_CS_Wispering* parse = static_cast< Heading::PCK_CS_Wispering* >( _recvData );
+				onWispering( _sessionInfo, parse );
+			}
+			break;
+		case E_PCK_TYPE::PCK_CS_REQUESTPREVIOUS:
+			{
+				Heading::PCK_CS_RequestPrevious* parse = static_cast< Heading::PCK_CS_RequestPrevious* >( _recvData );
+				onRequestPrevious( _sessionInfo, parse );
+			}
+			break;
 	}
 }
 
@@ -184,6 +200,7 @@ void EventManager::onExit( IN Heading::CClientSession* _sessionInfo )
 // 바로 다른 유저 세션 전송큐에 대기시켜놓기
 void EventManager::onChatting( IN Heading::CClientSession* _sessionInfo, IN Heading::PCK_CS_Chatting* _sendData )
 {
+	Log( Heading::formatf( "%s : %s", m_userData.find(_sessionInfo->Get_Event()).c_str(), _sendData->buffer ) );
 }
 
 // 귓속말 받음
@@ -209,7 +226,7 @@ void EventManager::Log( /*E_LOG_LEVEL _level,*/ std::string _log )
 		localtime_s( &formatTime, &currtime );
 
 		std::string formatString = Heading::formatf	(
-														"[ %04i.%02i.%02i-%02i:%02i:%02i ] : %s"
+														"[ %04i.%02i.%02i-%02i:%02i:%02i ] : %s \n"
 														, formatTime.tm_year + 1900
 														, formatTime.tm_mon + 1
 														, formatTime.tm_wday
