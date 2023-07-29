@@ -11,6 +11,9 @@ public:
 	void Remove( WSAEVENT _event );
 	void Remove( std::string _nickName );
 
+	std::string find( WSAEVENT _event );
+	WSAEVENT find( std::string _nickname );
+
 	void clear();
 
 private:

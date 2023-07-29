@@ -17,7 +17,11 @@ EventManager* EventManager::get( )
 
 void EventManager::Dispose( )
 {
-	// 혹시 비어있음 외의 상황으로 try_pop에 실패하지 않도록 비어있는가 체크로 루프
+	// 소유권이 없는 객체들 선행 비우기
+	m_userData.clear();
+	// m_wsaEvents - 이건 그냥 무시해버리기.
+
+	// 큐 컨테이너도 비워줄 겸 pop 처리합니다.
 	while( !m_acceptedSocket.empty( ) )
 	{
 		Heading::CClientSession* session = nullptr;
@@ -29,12 +33,15 @@ void EventManager::Dispose( )
 
 	for( auto& iter : m_sessions )
 	{
-		// 이벤트와 소켓 모두 이 때 닫힐 것.
-		delete iter.second;
-	}
-	m_sessions.clear();
+		WSAEVENT currentEvent = iter.first;
+		Heading::CClientSession* currentSession = iter.second;
 
-	m_userData.clear();
+		WSACloseEvent( currentEvent );
+		delete currentSession;
+	}
+
+	// 마지막 처리 끝날 때 까지 나온 모든 로그를 송출
+	logFlush();
 }
 
 void EventManager::onAccept( SOCKET _sock )
@@ -49,6 +56,20 @@ void EventManager::onAccept( SOCKET _sock )
 	else
 	{
 		closesocket( _sock );
+	}
+}
+
+void EventManager::SetAcceptSession( )
+{
+	if( !m_acceptedSocket.empty( ) )
+	{
+		Heading::CClientSession* ptr = nullptr;
+		if( m_acceptedSocket.try_pop( ptr ) )
+		{
+			WSAEVENT newEvent = ptr->Get_Event( );
+			m_wsaEvents.Add( newEvent );
+			m_sessions.insert( std::make_pair( newEvent, ptr ) );
+		}
 	}
 }
 
@@ -105,7 +126,7 @@ void EventManager::onRecv( IN Heading::CClientSession* _sessionInfo, IN Heading:
 	{
 	case E_PCK_TYPE::PCK_CS_ENTER:
 	{
-		PCK_CS_Enter* parse = static_cast< PCK_CS_Enter* >( _recvData );
+		Heading::PCK_CS_Enter* parse = static_cast< Heading::PCK_CS_Enter* >( _recvData );
 		onEnter( _sessionInfo, parse );
 	}
 		break;
@@ -114,19 +135,19 @@ void EventManager::onRecv( IN Heading::CClientSession* _sessionInfo, IN Heading:
 		break;
 	case E_PCK_TYPE::PCK_CS_CHATTING:
 	{
-		PCK_CS_Chatting* parse = static_cast< PCK_CS_Chatting* >( _recvData );
+		Heading::PCK_CS_Chatting* parse = static_cast< Heading::PCK_CS_Chatting* >( _recvData );
 		onChatting( _sessionInfo, parse );
 	}
 		break;
 	case E_PCK_TYPE::PCK_CS_WISPERING:
 	{
-		PCK_CS_Wispering* parse = static_cast< PCK_CS_Wispering* >( _recvData );
+		Heading::PCK_CS_Wispering* parse = static_cast< Heading::PCK_CS_Wispering* >( _recvData );
 		onWispering( _sessionInfo, parse );
 	}
 		break;
 	case E_PCK_TYPE::PCK_CS_REQUESTPREVIOUS:
 	{
-		PCK_CS_RequestPrevious* parse = static_cast< PCK_CS_RequestPrevious* >( _recvData );
+		Heading::PCK_CS_RequestPrevious* parse = static_cast< Heading::PCK_CS_RequestPrevious* >( _recvData );
 		onRequestPrevious( _sessionInfo, parse );
 	}
 		break;
@@ -141,36 +162,39 @@ void EventManager::onSend( IN Heading::CClientSession* _sessionInfo, IN Heading:
 }
 
 // 접속 한 유저의 계정정보 설정
-void EventManager::onEnter( IN Heading::CClientSession* _sessionInfo, IN PCK_CS_Enter* _recvData )
+void EventManager::onEnter( IN Heading::CClientSession* _sessionInfo, IN Heading::PCK_CS_Enter* _recvData )
 {
+	Log( Heading::formatf( "Enter : %s", _recvData->buffer ) );
 	m_userData.Add(_sessionInfo->Get_Event(), _recvData->buffer);
 }
 
 // 유저 탈출
 void EventManager::onExit( IN Heading::CClientSession* _sessionInfo )
 {
-	WSAEVENT targetEvent = _sessionInfo->Get_Event();
+	WSAEVENT targetEvent = _sessionInfo->Get_Event( );
+	std::string nickName = m_userData.find( targetEvent );
+	Log( Heading::formatf( "Exit : %s", nickName ) );
+	m_userData.Remove( targetEvent );
 	m_sessions.erase( targetEvent );
 	m_wsaEvents.Remove( targetEvent );
-	m_userData.Remove( targetEvent );
 	delete _sessionInfo;
 }
 
 // 채팅 받음
 // 바로 다른 유저 세션 전송큐에 대기시켜놓기
-void EventManager::onChatting( IN Heading::CClientSession* _sessionInfo, IN PCK_CS_Chatting* _sendData )
+void EventManager::onChatting( IN Heading::CClientSession* _sessionInfo, IN Heading::PCK_CS_Chatting* _sendData )
 {
 }
 
 // 귓속말 받음
 // 바로 대상 유저 세션 전송큐에 대기시켜놓기
-void EventManager::onWispering( IN Heading::CClientSession* _sessionInfo, IN PCK_CS_Wispering* _sendData )
+void EventManager::onWispering( IN Heading::CClientSession* _sessionInfo, IN Heading::PCK_CS_Wispering* _sendData )
 {
 }
 
 // 이전 데이터 요청 들어옴
 // 해당 유저 세션 전송큐에 대기시켜놓기
-void EventManager::onRequestPrevious( IN Heading::CClientSession* _sessionInfo, IN PCK_CS_RequestPrevious* _sendData )
+void EventManager::onRequestPrevious( IN Heading::CClientSession* _sessionInfo, IN Heading::PCK_CS_RequestPrevious* _sendData )
 {
 }
 
@@ -228,29 +252,5 @@ EventManager::EventManager( )
 
 EventManager::~EventManager( )
 {
-	// 소유권이 없는 객체들 선행 비우기
-	m_userData.clear();
-	// m_wsaEvents - 이건 그냥 무시해버리기.
-
-	// 큐 컨테이너도 비워줄 겸 pop 처리합니다.
-	while( !m_acceptedSocket.empty( ) )
-	{
-		Heading::CClientSession* session = nullptr;
-		if( m_acceptedSocket.try_pop( session ) )
-		{
-			delete session;
-		}
-	}
-
-	for( auto& iter : m_sessions )
-	{
-		WSAEVENT currentEvent = iter.first;
-		Heading::CClientSession* currentSession = iter.second;
-
-		WSACloseEvent( currentEvent );
-		delete currentSession;
-	}
-
-	// 마지막 처리 끝날 때 까지 나온 모든 로그를 송출
-	logFlush();
+	Dispose();
 }

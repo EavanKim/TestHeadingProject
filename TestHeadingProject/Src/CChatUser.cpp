@@ -45,6 +45,28 @@ void CChatUser::Remove( std::string _nickName )
 	}
 }
 
+std::string CChatUser::find( WSAEVENT _event )
+{
+	auto eventIter = m_eventMap.find( _event );
+	if( m_eventMap.end( ) != eventIter )
+	{
+		return eventIter->second;
+	}
+
+	return "\0";
+}
+
+WSAEVENT CChatUser::find( std::string _nickname )
+{
+	auto nickNameIter = m_nicknameMap.find( _nickname );
+	if( m_nicknameMap.end( ) != nickNameIter )
+	{
+		return nickNameIter->second;
+	}
+
+	return INVALID_HANDLE_VALUE;
+}
+
 void CChatUser::clear( )
 {
 	m_eventMap.clear();

@@ -9,6 +9,7 @@ void CServer_App::InitializeApplication( )
 	std::string str;
 	Heading::WSAErrorString( WSAStartup( MAKEWORD( 2, 2 ), &m_data ), str );
 	EventManager::init();
+	EventManager::get()->Log(str);
 }
 
 void CServer_App::ListenBinding( )
@@ -30,6 +31,8 @@ void CServer_App::SocketSelecting( )
 	EventManager* evtMgr = EventManager::get();
 	if( nullptr != evtMgr )
 	{
+		evtMgr->SetAcceptSession();
+
 		if( 0 != evtMgr->GetEventSize( ) )
 		{
 			DWORD result = WSAWaitForMultipleEvents( evtMgr->GetEventSize( ), evtMgr->GetEventArray( ), FALSE, 0, FALSE );

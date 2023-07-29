@@ -1,7 +1,23 @@
 #include "psudoPCH.h"
 
+#if _WIN32
+	#ifdef _DEBUG
+		#include "crtdbg.h"
+		#define new new( _CLIENT_BLOCK, __FILE__, __LINE__)
+	#endif // _DEBUG
+#endif
+
 int main()
 {
+#ifdef _DEBUG
+	//_CrtSetBreakAlloc( 264 );
+	_CrtSetReportMode( _CRT_WARN, _CRTDBG_MODE_DEBUG );
+	_CrtSetReportMode( _CRT_ERROR, _CRTDBG_MODE_DEBUG );
+	_CrtSetReportMode( _CRT_ASSERT, _CRTDBG_MODE_DEBUG );
+	//_CrtSetReportMode(_CRT_ERRCNT, _CRTDBG_MODE_DEBUG); // 에러 출력. CRT_ERRCNT 값 문제로 보이는데 확인 해 보기.
+	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+#endif
+
 	CServer_App::InitializeApplication();
 
 	CServer_App::ListenBinding();
@@ -9,6 +25,7 @@ int main()
 	{
 		while( CServer_App::ServiceCheck( ) )
 		{
+			EventManager::get()->logFlush();
 			CServer_App::SocketSelecting();
 		}
 	}
@@ -28,4 +45,10 @@ int main()
 	}
 
 	CServer_App::EndProcessing();
+
+#if _WIN32
+	#ifdef _DEBUG
+		_CrtDumpMemoryLeaks();
+	#endif
+#endif
 }

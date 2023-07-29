@@ -1,15 +1,5 @@
 #pragma once
 
-#pragma pack(push, 1)
-typedef Heading::SendStruct<10000, 12> PCK_CS_Enter;
-typedef Heading::SendStruct<10001, 2> PCK_CS_Exit;
-typedef Heading::SendStruct<10002, 102> PCK_CS_Chatting;
-typedef Heading::SendStruct<10003, 114> PCK_CS_Wispering;
-typedef Heading::SendStruct<10004, 8> PCK_CS_RequestPrevious;
-typedef Heading::SendStruct<10005, 8> PCK_SC_ReturnEnter;
-typedef Heading::SendStruct<10006, 120> PCK_SC_OthersChatting;
-#pragma pack(pop)
-
 enum E_PCK_TYPE
 {
 	PCK_CS_ENTER = 10000,
@@ -30,15 +20,16 @@ public:
 	void Dispose();
 
 	static void onAccept( SOCKET _sock );
+	void SetAcceptSession();
 
 	void onSelect( DWORD _eventIndex );
 	void onRecv( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _recvData );
 	void onSend( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _sendData );
-	void onEnter( IN Heading::CClientSession* _sessionInfo, IN PCK_CS_Enter* _recvData );
+	void onEnter( IN Heading::CClientSession* _sessionInfo, IN Heading::PCK_CS_Enter* _recvData );
 	void onExit( IN Heading::CClientSession* _sessionInfo );
-	void onChatting( IN Heading::CClientSession* _sessionInfo, IN PCK_CS_Chatting* _sendData );
-	void onWispering( IN Heading::CClientSession* _sessionInfo, IN PCK_CS_Wispering* _sendData );
-	void onRequestPrevious(IN Heading::CClientSession* _sessionInfo, IN PCK_CS_RequestPrevious* _sendData);
+	void onChatting( IN Heading::CClientSession* _sessionInfo, IN Heading::PCK_CS_Chatting* _sendData );
+	void onWispering( IN Heading::CClientSession* _sessionInfo, IN Heading::PCK_CS_Wispering* _sendData );
+	void onRequestPrevious(IN Heading::CClientSession* _sessionInfo, IN Heading::PCK_CS_RequestPrevious* _sendData);
 
 	void Log( /*E_LOG_LEVEL _level,*/ std::string _log );
 	void logFlush( );
