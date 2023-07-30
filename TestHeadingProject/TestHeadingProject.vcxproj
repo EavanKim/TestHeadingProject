@@ -71,7 +71,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)..\$(Platform)\$(Configuration)\</OutDir>
     <IncludePath>$(ProjectDir)Inc;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)Src;$(SourcePath)</SourcePath>
   </PropertyGroup>
