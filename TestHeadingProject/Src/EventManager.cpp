@@ -111,7 +111,7 @@ void EventManager::onSelect( DWORD _eventIndex )
 				return;
 			}
 			Heading::packetBuff buff; // local buffer니까 사라질거라고 보고 클리어 하지 않습니다.
-			current->RecvData( buff );
+			current->RecvData( OUT buff );
 
 			for( Heading::Header* packet : buff )
 			{
@@ -159,6 +159,17 @@ void EventManager::onRecv( IN Heading::CClientSession* _sessionInfo, IN Heading:
 			{
 				Heading::PCK_CS_Chatting* parse = static_cast< Heading::PCK_CS_Chatting* >( _recvData );
 				onChatting( _sessionInfo, parse );
+
+				// echo
+				{
+					for (size_t i = 0; i < 500; ++i)
+					{
+						auto echoPacket = new std::remove_pointer_t<decltype(parse)>;
+						memcpy(echoPacket, parse, parse->length);
+						_sessionInfo->enqueueSend(echoPacket);
+					}
+					_sessionInfo->SendData();
+				}
 			}
 			break;
 		case E_PCK_TYPE::PCK_CS_WISPERING:
