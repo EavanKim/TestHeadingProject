@@ -49,6 +49,11 @@ void CServer_App::SocketSelecting( )
 
 void CServer_App::EndProcessing( )
 {
+	EventManager* mgr = EventManager::get();
+	WSASetEvent( mgr->GetEventArray()[0] );
+	if(m_accept->joinable() )
+		m_accept->join();
+	delete m_accept;
 	EventManager::get()->Destroy();
 	WSACleanup();
 }

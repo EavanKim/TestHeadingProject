@@ -14,6 +14,12 @@ void signal_handler(int sig)
 {
 	signal(sig, signal_handler);
 	CServer_App::ServerStop();
+	CServer_App::EndProcessing( );
+#if _WIN32
+#ifdef _DEBUG
+	_CrtDumpMemoryLeaks( );
+#endif
+#endif
 	exitSig= 1;
 }
 
@@ -26,7 +32,7 @@ int main()
 #endif
 
 #ifdef _DEBUG
-	_CrtSetBreakAlloc( 175 );
+	//_CrtSetBreakAlloc( 175 );
 	_CrtSetReportMode( _CRT_WARN, _CRTDBG_MODE_DEBUG );
 	_CrtSetReportMode( _CRT_ERROR, _CRTDBG_MODE_DEBUG );
 	_CrtSetReportMode( _CRT_ASSERT, _CRTDBG_MODE_DEBUG );
