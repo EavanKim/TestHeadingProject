@@ -17,6 +17,7 @@ class EventManager
 public:
 	static void init();
 	static EventManager* get();
+	void Destroy();
 	void Dispose();
 
 	static void onAccept( SOCKET _sock );

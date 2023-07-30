@@ -15,6 +15,12 @@ EventManager* EventManager::get( )
 	return m_instance;
 }
 
+void EventManager::Destroy( )
+{
+	Dispose();
+	delete m_instance;
+}
+
 void EventManager::Dispose( )
 {
 	// 소유권이 없는 객체들 선행 비우기

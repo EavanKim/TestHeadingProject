@@ -49,11 +49,32 @@ void CServer_App::SocketSelecting( )
 
 void CServer_App::EndProcessing( )
 {
-	EventManager::get()->Dispose();
+	EventManager::get()->Destroy();
 	WSACleanup();
 }
 
 bool CServer_App::ServiceCheck( )
 {
 	return m_live;
+}
+
+void CServer_App::ServerStop( )
+{
+	m_live = false;
+}
+
+void CServer_App::SystemMessageProcessing( )
+{
+	MSG msg;
+	if( PeekMessageA( &msg, NULL, NULL, NULL, PM_REMOVE ) )
+	{
+		switch( msg.message )
+		{
+			case WM_QUIT:
+				{
+					EndProcessing();
+				}
+				break;
+		}
+	}
 }
