@@ -22,6 +22,7 @@ public:
 
 	static void onAccept( SOCKET _sock );
 	void SetAcceptSession();
+	void FlushSend();
 
 	void onSelect( DWORD _eventIndex );
 	void onRecv( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _recvData );

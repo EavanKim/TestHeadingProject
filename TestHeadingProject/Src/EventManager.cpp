@@ -87,6 +87,16 @@ void EventManager::SetAcceptSession( )
 	}
 }
 
+void EventManager::FlushSend( )
+{
+	for( auto iter : m_sessions )
+	{
+		Heading::CClientSession* curSession = iter.second;
+
+		curSession->SendData();
+	}
+}
+
 void EventManager::onSelect( DWORD _eventIndex )
 {
 	// WSAWaitForMultipleEvents Result
@@ -113,11 +123,18 @@ void EventManager::onSelect( DWORD _eventIndex )
 			Heading::packetBuff buff; // local buffer니까 사라질거라고 보고 클리어 하지 않습니다.
 			current->RecvData( OUT buff );
 
-			for( Heading::Header* packet : buff )
+			while( !buff.empty( ) )
 			{
-				onRecv( current, packet );
+				Heading::Header* packet = buff.front();
+				if( nullptr != packet )
+				{
+					onRecv( current, packet );
 
-				delete packet;
+					delete packet;
+				}
+
+				// Null 이 나왔더라도 front에 null이 차지하고 있던거니 팝해서 없앱니다.
+				buff.pop();
 			}
 		}
 

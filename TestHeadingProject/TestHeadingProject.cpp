@@ -50,7 +50,6 @@ int main()
 		{
 			EventManager::get( )->logFlush( );
 			CServer_App::SocketSelecting( );
-			CServer_App::SystemMessageProcessing( );
 		}
 	}
 	catch( ... )

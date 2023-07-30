@@ -44,6 +44,8 @@ void CServer_App::SocketSelecting( )
 				return;
 			}
 		}
+
+		evtMgr->FlushSend(); // 전송 오류로 실패한 것 재시도 위치.
 	}
 }
 
@@ -66,20 +68,4 @@ bool CServer_App::ServiceCheck( )
 void CServer_App::ServerStop( )
 {
 	m_live = false;
-}
-
-void CServer_App::SystemMessageProcessing( )
-{
-	MSG msg;
-	if( PeekMessageA( &msg, NULL, NULL, NULL, PM_REMOVE ) )
-	{
-		switch( msg.message )
-		{
-			case WM_QUIT:
-				{
-					EndProcessing();
-				}
-				break;
-		}
-	}
 }

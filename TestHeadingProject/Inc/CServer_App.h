@@ -11,8 +11,6 @@ public:
 	static bool ServiceCheck();
 
 	static void ServerStop();
-
-	static void SystemMessageProcessing();
 private:
 	static std::atomic<bool> m_live;
 
