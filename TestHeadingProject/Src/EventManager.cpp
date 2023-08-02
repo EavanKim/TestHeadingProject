@@ -145,7 +145,17 @@ void EventManager::onSelect( DWORD _eventIndex )
 			{
 				return;
 			}
-			current->SendData();
+			current->onEventSend();
+		}
+
+		if( NetworkEvents.lNetworkEvents & FD_CONNECT )
+		{
+			if( NetworkEvents.lNetworkEvents & FD_CONNECT
+				&& NetworkEvents.iErrorCode[ FD_CONNECT_BIT ] != 0 )
+			{
+				return;
+			}
+			current->onEventSend();
 		}
 
 		if( NetworkEvents.lNetworkEvents & FD_CLOSE )
@@ -185,7 +195,6 @@ void EventManager::onRecv( IN Heading::CClientSession* _sessionInfo, IN Heading:
 						memcpy(echoPacket, parse, parse->length);
 						_sessionInfo->enqueueSend(echoPacket);
 					}
-					_sessionInfo->SendData();
 				}
 			}
 			break;
