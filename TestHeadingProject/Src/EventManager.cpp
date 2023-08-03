@@ -186,16 +186,6 @@ void EventManager::onRecv( IN Heading::CClientSession* _sessionInfo, IN Heading:
 			{
 				Heading::PCK_CS_Chatting* parse = static_cast< Heading::PCK_CS_Chatting* >( _recvData );
 				onChatting( _sessionInfo, parse );
-
-				// echo
-				{
-					for (size_t i = 0; i < 50000; ++i)
-					{
-						auto echoPacket = new std::remove_pointer_t<decltype(parse)>;
-						memcpy(echoPacket, parse, parse->length);
-						_sessionInfo->enqueueSend(echoPacket);
-					}
-				}
 			}
 			break;
 		case E_PCK_TYPE::PCK_CS_WISPERING:
