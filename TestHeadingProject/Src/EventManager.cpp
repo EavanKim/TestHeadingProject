@@ -189,7 +189,7 @@ void EventManager::onRecv( IN Heading::CClientSession* _sessionInfo, IN Heading:
 
 				// echo
 				{
-					for (size_t i = 0; i < 500; ++i)
+					for (size_t i = 0; i < 50000; ++i)
 					{
 						auto echoPacket = new std::remove_pointer_t<decltype(parse)>;
 						memcpy(echoPacket, parse, parse->length);
