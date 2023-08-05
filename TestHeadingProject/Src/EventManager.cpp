@@ -128,13 +128,28 @@ void EventManager::onSelect( DWORD _eventIndex )
 				Heading::Header* packet = buff.front();
 				if( nullptr != packet )
 				{
-					onRecv( current, packet );
+					if( current->CheckLive( ) )
+					{
+						onRecv( current, packet );
+					}
 
 					delete packet;
-				}
 
-				// Null 이 나왔더라도 front에 null이 차지하고 있던거니 팝해서 없앱니다.
-				buff.pop();
+					buff.pop();
+				}
+				else
+				{
+					// null 은 크래시 사유라는 공유를 따라 크래시시킵니다.
+					throw std::exception( "Receive Null Crash!!!" );
+				}
+			}
+
+			if( !current->CheckLive( ) )
+			{
+				m_userData.Remove( currentEvent );
+				m_wsaEvents.Remove( currentEvent );
+				m_sessions.erase( currentEvent );
+				return;
 			}
 		}
 
