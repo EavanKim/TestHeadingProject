@@ -38,10 +38,16 @@ void CServer_App::SocketSelecting( )
 			DWORD result = WSAWaitForMultipleEvents( evtMgr->GetEventSize( ), evtMgr->GetEventArray( ), FALSE, 0, FALSE );
 			switch( Heading::WaitObjectCheck( result ) )
 			{
-				// 나머지 에러 극복도 구현 해 보기
+			case Heading::E_WaitEvent_Result::E_Wait_Reset_EVENTS_ARRAY:
+				evtMgr->Recreate_EventInfo();
+				break;
+			// 나머지 에러 극복도 구현 해 보기
 			case Heading::E_WaitEvent_Result::E_Wait_OK:
 				evtMgr->onSelect( result );
-				return;
+				break;
+			case Heading::E_WaitEvent_Result::E_Wait_Delayed:
+				// 작업 대기중 로그이므로 지나갑니다.
+				break;
 			}
 		}
 

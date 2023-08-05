@@ -33,6 +33,9 @@ public:
 	void onWispering( IN Heading::CClientSession* _sessionInfo, IN Heading::PCK_CS_Wispering* _sendData );
 	void onRequestPrevious(IN Heading::CClientSession* _sessionInfo, IN Heading::PCK_CS_RequestPrevious* _sendData);
 
+	void Remove_Event( WSAEVENT _key );
+	void Recreate_EventInfo();
+
 	void Log( /*E_LOG_LEVEL _level,*/ std::string _log );
 	void logFlush( );
 

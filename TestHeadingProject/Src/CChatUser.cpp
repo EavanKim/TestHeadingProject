@@ -69,6 +69,7 @@ WSAEVENT CChatUser::find( std::string _nickname )
 
 void CChatUser::clear( )
 {
+	// 역시 m_sessions의 session이 주인이므로 그냥 비웁니다.
 	m_eventMap.clear();
 	m_nicknameMap.clear();
 }
