@@ -182,36 +182,7 @@ void EventManager::onSelect( DWORD _eventIndex )
 
 void EventManager::onRecv( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _recvData )
 {
-	switch( _recvData->type )
-	{
-		case E_PCK_TYPE::PCK_CS_ENTER:
-			{
-				Heading::PCK_CS_Enter* parse = static_cast< Heading::PCK_CS_Enter* >( _recvData );
-				onEnter( _sessionInfo, parse );
-			}
-			break;
-		case E_PCK_TYPE::PCK_CS_EXIT:
-			onExit( _sessionInfo );
-			break;
-		case E_PCK_TYPE::PCK_CS_CHATTING:
-			{
-				Heading::PCK_CS_Chatting* parse = static_cast< Heading::PCK_CS_Chatting* >( _recvData );
-				onChatting( _sessionInfo, parse );
-			}
-			break;
-		case E_PCK_TYPE::PCK_CS_WISPERING:
-			{
-				Heading::PCK_CS_Wispering* parse = static_cast< Heading::PCK_CS_Wispering* >( _recvData );
-				onWispering( _sessionInfo, parse );
-			}
-			break;
-		case E_PCK_TYPE::PCK_CS_REQUESTPREVIOUS:
-			{
-				Heading::PCK_CS_RequestPrevious* parse = static_cast< Heading::PCK_CS_RequestPrevious* >( _recvData );
-				onRequestPrevious( _sessionInfo, parse );
-			}
-			break;
-	}
+	m_handler.Do_Process(_sessionInfo, _recvData);
 }
 
 // 여기는 나중에 onSend 들어갔을 때 데이터를 암호화 하는데 써야할지 고민 해 보기
@@ -222,67 +193,95 @@ void EventManager::onSend( IN Heading::CClientSession* _sessionInfo, IN Heading:
 }
 
 // 접속 한 유저의 계정정보 설정
-void EventManager::onEnter( IN Heading::CClientSession* _sessionInfo, IN Heading::PCK_CS_Enter* _recvData )
+void EventManager::onEnter( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _recvData )
 {
-	Log( Heading::formatf( "Enter : %s", _recvData->buffer ) );
-	m_userData.Add(_sessionInfo->Get_Event(), _recvData->buffer);
+	EventManager* mgr = EventManager::get();
+
+	if( nullptr != mgr )
+	{
+		Heading::PCK_CS_Enter* parse = static_cast< Heading::PCK_CS_Enter* >( _recvData );
+		mgr->Log( Heading::formatf( "Enter : %s", parse->buffer ) );
+		mgr->m_userData.Add( _sessionInfo->Get_Event( ), parse->buffer );
+	}
 }
 
 // 유저 탈출
-void EventManager::onExit( IN Heading::CClientSession* _sessionInfo )
+void EventManager::onExit( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _recvData )
 {
-	WSAEVENT targetEvent = _sessionInfo->Get_Event( );
-	std::string nickName = m_userData.find( targetEvent );
-	Log( Heading::formatf( "Exit : %s", nickName ) );
-	Remove_Event( targetEvent );
-	delete _sessionInfo;
+	EventManager* mgr = EventManager::get();
+
+	if( nullptr != mgr )
+	{
+		WSAEVENT targetEvent = _sessionInfo->Get_Event( );
+		std::string nickName = mgr->m_userData.find( targetEvent );
+		mgr->Log( Heading::formatf( "Exit : %s", nickName ) );
+		mgr->Remove_Event( targetEvent );
+		delete _sessionInfo;
+	}
 }
 
 // 채팅 받음
 // 바로 다른 유저 세션 전송큐에 대기시켜놓기
-void EventManager::onChatting( IN Heading::CClientSession* _sessionInfo, IN Heading::PCK_CS_Chatting* _sendData )
+void EventManager::onChatting( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _sendData )
 {
-	Log( Heading::formatf( "%s : %s", m_userData.find(_sessionInfo->Get_Event()).c_str(), _sendData->buffer ) );
-	for( auto iter = m_sessions.begin( ); m_sessions.end( ) != iter; ++iter )
-	{
-		Heading::CClientSession* currentSession = iter->second;
+	EventManager* mgr = EventManager::get();
 
-		currentSession->enqueueSend( _sendData );
+	if( nullptr != mgr )
+	{
+		Heading::PCK_CS_Chatting* parse = static_cast< Heading::PCK_CS_Chatting* >( _sendData );
+		mgr->Log( Heading::formatf( "%s : %s", mgr->m_userData.find( _sessionInfo->Get_Event( ) ).c_str( ), parse->buffer ) );
+		for( auto iter = mgr->m_sessions.begin( ); mgr->m_sessions.end( ) != iter; ++iter )
+		{
+			Heading::CClientSession* currentSession = iter->second;
+
+			currentSession->enqueueSend( _sendData );
+		}
 	}
 }
 
 // 귓속말 받음
 // 바로 대상 유저 세션 전송큐에 대기시켜놓기
-void EventManager::onWispering( IN Heading::CClientSession* _sessionInfo, IN Heading::PCK_CS_Wispering* _sendData )
+void EventManager::onWispering( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _sendData )
 {
-	std::string name( 13, '\0' );// 닉네임 풀 사이즈 12
-	memcpy_s( name.data( ), 12, _sendData->buffer, 12 );
-	std::string chat( 101, '\0' ); // 채팅 풀 사이즈 100
-	memcpy_s( chat.data( ), 100, ( ( char* ) _sendData->buffer ) + 12, 100 );
-	Log( Heading::formatf( "%s : %s - %s", m_userData.find( _sessionInfo->Get_Event( ) ).c_str( ), name.c_str( ), chat.c_str( ) ) );
-
-	WSAEVENT target = m_userData.find(name);
-	if( INVALID_HANDLE_VALUE != target ) // EVENT 객체는 Window Handle 이므로 비정상일땐 Windows에 정의된 INVALID HANDLE 처리로 갑니다.
+	EventManager* mgr = EventManager::get();
+	
+	if( nullptr != mgr )
 	{
-		//std::unordered_map<WSAEVENT, Heading::CClientSession*>::iterator targetUser;
-		auto targetUser = m_sessions.find( target );
-		if( m_sessions.end( ) != targetUser )
+		Heading::PCK_CS_Wispering* parse = static_cast<Heading::PCK_CS_Wispering*>(_sendData);
+		std::string name( 13, '\0' );// 닉네임 풀 사이즈 12
+		memcpy_s( name.data( ), 12, parse->buffer, 12 );
+		std::string chat( 101, '\0' ); // 채팅 풀 사이즈 100
+		memcpy_s( chat.data( ), 100, ( ( char* ) parse->buffer ) + 12, 100 );
+		mgr->Log( Heading::formatf( "%s : %s - %s", mgr->m_userData.find( _sessionInfo->Get_Event( ) ).c_str( ), name.c_str( ), chat.c_str( ) ) );
+
+		WSAEVENT target = mgr->m_userData.find(name);
+		if( INVALID_HANDLE_VALUE != target ) // EVENT 객체는 Window Handle 이므로 비정상일땐 Windows에 정의된 INVALID HANDLE 처리로 갑니다.
 		{
-			Heading::CClientSession* currentSession = targetUser->second;
+			//std::unordered_map<WSAEVENT, Heading::CClientSession*>::iterator targetUser;
+			auto targetUser = mgr->m_sessions.find( target );
+			if( mgr->m_sessions.end( ) != targetUser )
+			{
+				Heading::CClientSession* currentSession = targetUser->second;
 
-			Heading::PCK_CS_Wispering returnWisper;
-			std::string Nick = m_userData.find( _sessionInfo->Get_Event( ) );
+				Heading::PCK_CS_Wispering returnWisper;
+				std::string Nick = mgr->m_userData.find( _sessionInfo->Get_Event( ) );
 
-			memcpy_s(returnWisper.buffer, 12, Nick.data(), Nick.size() - 1);
-			memcpy_s(returnWisper.buffer, 12, chat.data(), chat.size() - 1);
-			currentSession->enqueueSend(&returnWisper);
+				memcpy_s(returnWisper.buffer, 12, Nick.data(), Nick.size() - 1);
+				memcpy_s(returnWisper.buffer, 12, chat.data(), chat.size() - 1);
+				currentSession->enqueueSend(&returnWisper);
+			}
 		}
 	}
 }
 
 // 이전 데이터 요청 들어옴
 // 해당 유저 세션 전송큐에 대기시켜놓기
-void EventManager::onRequestPrevious( IN Heading::CClientSession* _sessionInfo, IN Heading::PCK_CS_RequestPrevious* _sendData )
+void EventManager::onRequestPrevious( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _sendData )
+{
+	Heading::PCK_CS_RequestPrevious* parse = static_cast<Heading::PCK_CS_RequestPrevious*>(_sendData);
+}
+
+void EventManager::onNonDefinedCallback( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _sendData )
 {
 }
 
@@ -368,9 +367,43 @@ WSAEVENT* EventManager::GetEventArray( )
 	return *m_wsaEvents;
 }
 
+//enum E_PCK_TYPE
+//{
+//	PCK_Shutdown,
+//	PCK_Ping,
+//	PCK_Pong,
+//	PCK_CS_ENTER,
+//	PCK_CS_EXIT,
+//	PCK_CS_CHATTING,
+//	PCK_CS_WISPERING,
+//	PCK_SC_WISPERING,
+//	PCK_CS_REQUESTPREVIOUS,
+//	PCK_SC_RETURNENTER,
+//	PCK_SC_OTHERSCHATTING,
+//	PCK_SC_REQUESTRESET,
+//	PCK_CS_MAX
+//};
+//typedef SendStruct<1> PCK_SessionKey;
+//typedef SendStruct<1> PCK_Shutdown;
+//typedef SendStruct<1> PCK_Ping;
+//typedef SendStruct<1> PCK_Pong;
+//typedef SendStruct<12> PCK_CS_Enter;
+//typedef SendStruct<2> PCK_CS_Exit;
+//typedef SendStruct<100> PCK_CS_Chatting;
+//typedef SendStruct<112> PCK_CS_Wispering;
+//typedef SendStruct<112> PCK_SC_Wispering;
+//typedef SendStruct<8> PCK_CS_RequestPrevious;
+//typedef SendStruct<8> PCK_SC_ReturnEnter;
+//typedef SendStruct<120> PCK_SC_OthersChatting;
+//typedef SendStruct<8> PCK_SC_RequestReset;
 EventManager::EventManager( )
+	: m_handler( &(onNonDefinedCallback) ) // Null일때 처리 할 포인터
 {
-
+	m_handler.AddPacketType<Heading::PCK_CS_Enter>(onEnter);
+	m_handler.AddPacketType<Heading::PCK_CS_Exit>(onExit);
+	m_handler.AddPacketType<Heading::PCK_CS_Chatting>(onChatting);
+	m_handler.AddPacketType<Heading::PCK_CS_Wispering>(onWispering);
+	m_handler.AddPacketType<Heading::PCK_CS_RequestPrevious>(onRequestPrevious);
 }
 
 EventManager::~EventManager( )
