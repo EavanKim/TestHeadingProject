@@ -4,10 +4,10 @@ EventManager*											EventManager::m_instance		= nullptr;
 uint16_t												EventManager::m_sessionSize		= 0;
 concurrency::concurrent_queue<Heading::CClientSession*>	EventManager::m_acceptedSocket;
 
-void EventManager::init( )
+void EventManager::init( E_PCK_CS_TYPE _type )
 {
 	if( nullptr == m_instance )
-		m_instance = new EventManager();
+		m_instance = new EventManager( _type );
 }
 
 EventManager* EventManager::get( )
@@ -192,6 +192,89 @@ void EventManager::onSend( IN Heading::CClientSession* _sessionInfo, IN Heading:
 
 }
 
+// 이전 데이터 요청 들어옴
+// 해당 유저 세션 전송큐에 대기시켜놓기
+void EventManager::onRequestPrevious( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _sendData )
+{
+	Heading::PCK_CS_RequestPrevious* parse = static_cast<Heading::PCK_CS_RequestPrevious*>(_sendData);
+}
+
+void EventManager::onNonDefinedCallback( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _sendData )
+{
+}
+
+void EventManager::Remove_Event( WSAEVENT _key )
+{
+	m_userData.Remove( _key );
+	m_wsaEvents.remove( _key );
+	m_sessions.erase( _key );
+}
+
+void EventManager::Recreate_EventInfo( )
+{
+	// 이 동작은 Session이 유지되면 Recv 되는 중간 데이터는 Event가 정상인 Session이 살아있는 동안 유지될 것으로 가정하고
+	// 모든 데이터를 비우고 접속정보를 날린 뒤 재로그인 요청하는 구조입니다.
+	// 실제 서비스에선 초기화 문제로 이런 방식은 힘들지도
+	// 데이터를 한 번 비운다음
+	FlushSend();
+
+	// 기본 유저데이터를 다 날려버리고
+	m_userData.clear();
+
+	//for( std::unordered_map<WSAEVENT, Heading::CClientSession*>::iterator iter = m_sessions.begin( ); m_sessions.end( ) != iter; ++iter )
+	for( auto iter = m_sessions.begin( ); m_sessions.end( ) != iter; ++iter )
+	{
+		Heading::CClientSession* currentSession = iter->second;
+		currentSession->enqueueSend( new Heading::PCK_SC_RequestReset(  ) ); // 문제가 있는 소켓은 전송중에 죽는걸 기대하고 재 로그인 요청을 넣습니다.
+	}
+
+	m_wsaEvents.clear(); // 한 번 비우고
+
+	//for( std::unordered_map<WSAEVENT, Heading::CClientSession*>::iterator iter = m_sessions.begin( ); m_sessions.end( ) != iter; ++iter )
+	for( auto iter = m_sessions.begin( ); m_sessions.end( ) != iter; ++iter )
+	{
+		WSAEVENT currentEvent = iter->first;
+		m_wsaEvents.add( currentEvent ); // 문제가 있는 소켓은 지워졌으리라 기대하고 다시 추가합니다.
+	}
+}
+
+
+void EventManager::Log( /*E_LOG_LEVEL _level,*/ std::string _log )
+{
+	//if( m_logLevel < _level )
+	//{
+		__time64_t currtime = time( NULL );
+
+		tm formatTime = {};
+		localtime_s( &formatTime, &currtime );
+
+		std::string formatString = Heading::formatf	(
+														"[ %04i.%02i.%02i-%02i:%02i:%02i ] : %s \n"
+														, formatTime.tm_year + 1900
+														, formatTime.tm_mon + 1
+														, formatTime.tm_wday
+														, formatTime.tm_hour
+														, formatTime.tm_min
+														, formatTime.tm_sec
+														, _log.c_str( )
+													);
+
+		m_logQueue.push( formatString );
+	//}
+}
+
+void EventManager::logFlush()
+{
+	while( !m_logQueue.empty( ) )
+	{
+		std::string popResult;
+		if( m_logQueue.try_pop( popResult ) )
+		{
+			printf( popResult.c_str( ) );
+		}
+	}
+}
+
 // 접속 한 유저의 계정정보 설정
 void EventManager::onEnter( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _recvData )
 {
@@ -244,7 +327,7 @@ void EventManager::onChatting( IN Heading::CClientSession* _sessionInfo, IN Head
 void EventManager::onWispering( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _sendData )
 {
 	EventManager* mgr = EventManager::get();
-	
+
 	if( nullptr != mgr )
 	{
 		Heading::PCK_CS_Wispering* parse = static_cast<Heading::PCK_CS_Wispering*>(_sendData);
@@ -274,89 +357,6 @@ void EventManager::onWispering( IN Heading::CClientSession* _sessionInfo, IN Hea
 	}
 }
 
-// 이전 데이터 요청 들어옴
-// 해당 유저 세션 전송큐에 대기시켜놓기
-void EventManager::onRequestPrevious( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _sendData )
-{
-	Heading::PCK_CS_RequestPrevious* parse = static_cast<Heading::PCK_CS_RequestPrevious*>(_sendData);
-}
-
-void EventManager::onNonDefinedCallback( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _sendData )
-{
-}
-
-void EventManager::Remove_Event( WSAEVENT _key )
-{
-	m_userData.Remove( _key );
-	m_wsaEvents.remove( _key );
-	m_sessions.erase( _key );
-}
-
-void EventManager::Recreate_EventInfo( )
-{
-	// 이 동작은 Session이 유지되면 Recv 되는 중간 데이터는 Event가 정상인 Session이 살아있는 동안 유지될 것으로 가정하고
-	// 모든 데이터를 비우고 접속정보를 날린 뒤 재로그인 요청하는 구조입니다.
-	// 실제 서비스에선 초기화 문제로 이런 방식은 힘들지도
-	// 데이터를 한 번 비운다음
-	FlushSend();
-
-	// 기본 유저데이터를 다 날려버리고
-	m_userData.clear();
-
-	//for( std::unordered_map<WSAEVENT, Heading::CClientSession*>::iterator iter = m_sessions.begin( ); m_sessions.end( ) != iter; ++iter )
-	for( auto iter = m_sessions.begin( ); m_sessions.end( ) != iter; ++iter )
-	{
-		Heading::CClientSession* currentSession = iter->second;
-		currentSession->enqueueSend( new Heading::PCK_SC_RequestReset( ) ); // 문제가 있는 소켓은 전송중에 죽는걸 기대하고 재 로그인 요청을 넣습니다.
-	}
-
-	m_wsaEvents.clear(); // 한 번 비우고
-
-	//for( std::unordered_map<WSAEVENT, Heading::CClientSession*>::iterator iter = m_sessions.begin( ); m_sessions.end( ) != iter; ++iter )
-	for( auto iter = m_sessions.begin( ); m_sessions.end( ) != iter; ++iter )
-	{
-		WSAEVENT currentEvent = iter->first;
-		m_wsaEvents.add( currentEvent ); // 문제가 있는 소켓은 지워졌으리라 기대하고 다시 추가합니다.
-	}
-}
-
-
-void EventManager::Log( /*E_LOG_LEVEL _level,*/ std::string _log )
-{
-	//if( m_logLevel < _level )
-	//{
-		__time64_t currtime = time( NULL );
-
-		tm formatTime = {};
-		localtime_s( &formatTime, &currtime );
-
-		std::string formatString = Heading::formatf	(
-														"[ %04i.%02i.%02i-%02i:%02i:%02i ] : %s \n"
-														, formatTime.tm_year + 1900
-														, formatTime.tm_mon + 1
-														, formatTime.tm_wday
-														, formatTime.tm_hour
-														, formatTime.tm_min
-														, formatTime.tm_sec
-														, _log.c_str( )
-													);
-
-		m_logQueue.push( formatString );
-	//}
-}
-
-void EventManager::logFlush()
-{
-	while( !m_logQueue.empty( ) )
-	{
-		std::string popResult;
-		if( m_logQueue.try_pop( popResult ) )
-		{
-			printf( popResult.c_str( ) );
-		}
-	}
-}
-
 uint8_t EventManager::GetEventSize( )
 {
 	return m_wsaEvents.size();
@@ -367,38 +367,20 @@ WSAEVENT* EventManager::GetEventArray( )
 	return *m_wsaEvents;
 }
 
-//enum E_PCK_TYPE
-//{
-//	PCK_Shutdown,
-//	PCK_Ping,
-//	PCK_Pong,
-//	PCK_CS_ENTER,
-//	PCK_CS_EXIT,
-//	PCK_CS_CHATTING,
-//	PCK_CS_WISPERING,
-//	PCK_SC_WISPERING,
-//	PCK_CS_REQUESTPREVIOUS,
-//	PCK_SC_RETURNENTER,
-//	PCK_SC_OTHERSCHATTING,
-//	PCK_SC_REQUESTRESET,
-//	PCK_CS_MAX
-//};
-//typedef SendStruct<1> PCK_SessionKey;
-//typedef SendStruct<1> PCK_Shutdown;
-//typedef SendStruct<1> PCK_Ping;
-//typedef SendStruct<1> PCK_Pong;
-//typedef SendStruct<12> PCK_CS_Enter;
-//typedef SendStruct<2> PCK_CS_Exit;
-//typedef SendStruct<100> PCK_CS_Chatting;
-//typedef SendStruct<112> PCK_CS_Wispering;
-//typedef SendStruct<112> PCK_SC_Wispering;
-//typedef SendStruct<8> PCK_CS_RequestPrevious;
-//typedef SendStruct<8> PCK_SC_ReturnEnter;
-//typedef SendStruct<120> PCK_SC_OthersChatting;
-//typedef SendStruct<8> PCK_SC_RequestReset;
-EventManager::EventManager( )
+EventManager::EventManager( E_PCK_CS_TYPE _type )
 	: m_handler( &(onNonDefinedCallback) ) // Null일때 처리 할 포인터
 {
+	switch( _type )
+	{
+		case E_EventManager_State::EventManager_Client:
+			InitializeClient();
+			break;
+		case E_EventManager_State::EventManager_Server:
+			InitializeServer();
+			break;
+	}
+
+	m_handler.AddPacketType<Heading::PCK_Pong>(onPong);
 	m_handler.AddPacketType<Heading::PCK_CS_Enter>(onEnter);
 	m_handler.AddPacketType<Heading::PCK_CS_Exit>(onExit);
 	m_handler.AddPacketType<Heading::PCK_CS_Chatting>(onChatting);
