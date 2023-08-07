@@ -14,15 +14,15 @@ void CServer_App::InitializeApplication( )
 
 void CServer_App::ListenBinding( )
 {
-	// Thread ë§Œë“¤ë©´ì„œ ë°”ë¡œ ë“±ë¡.
+	// Thread ¸¸µé¸é¼­ ¹Ù·Î µî·Ï.
 	Heading::AcceptThreadInfo* info = new Heading::AcceptThreadInfo();
 
 	info->port = 50000;
 	info->liveChecker = ServiceCheck;
 	info->onAccept = EventManager::onAccept;
 
-	// infoëŠ” ì•ˆì—ì„œ ìž˜ ì§€ìš°ëŠ” ë°©í–¥ìœ¼ë¡œ ì²˜ë¦¬.
-	// ì§€ì—­ì„± ìžˆëŠ” ë©”ëª¨ë¦¬ëŠ” ìŠ¤íƒ í˜„í™©ê³¼ ì •ë¦¬ ìƒí™©ì— ë”°ë¼ ìœ„í—˜í•˜ë¯€ë¡œ íž™ì„ ì‚¬ìš©í•©ë‹ˆë‹¤.
+	// info´Â ¾È¿¡¼­ Àß Áö¿ì´Â ¹æÇâÀ¸·Î Ã³¸®.
+	// Áö¿ª¼º ÀÖ´Â ¸Þ¸ð¸®´Â ½ºÅÃ ÇöÈ²°ú Á¤¸® »óÈ²¿¡ µû¶ó À§ÇèÇÏ¹Ç·Î ÈüÀ» »ç¿ëÇÕ´Ï´Ù.
 	m_accept = new Heading::CAcceptThread( info );
 }
 
@@ -41,17 +41,17 @@ void CServer_App::SocketSelecting( )
 			case Heading::E_WaitEvent_Result::E_Wait_Reset_EVENTS_ARRAY:
 				evtMgr->Recreate_EventInfo();
 				break;
-			// ë‚˜ë¨¸ì§€ ì—ëŸ¬ ê·¹ë³µë„ êµ¬í˜„ í•´ ë³´ê¸°
+			// ³ª¸ÓÁö ¿¡·¯ ±Øº¹µµ ±¸Çö ÇØ º¸±â
 			case Heading::E_WaitEvent_Result::E_Wait_OK:
 				evtMgr->onSelect( result );
 				break;
 			case Heading::E_WaitEvent_Result::E_Wait_Delayed:
-				// ìž‘ì—… ëŒ€ê¸°ì¤‘ ë¡œê·¸ì´ë¯€ë¡œ ì§€ë‚˜ê°‘ë‹ˆë‹¤.
+				// ÀÛ¾÷ ´ë±âÁß ·Î±×ÀÌ¹Ç·Î Áö³ª°©´Ï´Ù.
 				break;
 			}
 		}
 
-		evtMgr->FlushSend(); // ì „ì†¡ ì˜¤ë¥˜ë¡œ ì‹¤íŒ¨í•œ ê²ƒ ìž¬ì‹œë„ ìœ„ì¹˜.
+		evtMgr->FlushSend(); // Àü¼Û ¿À·ù·Î ½ÇÆÐÇÑ °Í Àç½Ãµµ À§Ä¡.
 	}
 }
 

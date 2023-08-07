@@ -23,11 +23,11 @@ void EventManager::Destroy( )
 
 void EventManager::Dispose( )
 {
-	// ì†Œìœ ê¶Œì´ ì—†ëŠ” ê°ì²´ë“¤ ì„ í–‰ ë¹„ìš°ê¸°
+	// ¼ÒÀ¯±ÇÀÌ ¾ø´Â °´Ã¼µé ¼±Çà ºñ¿ì±â
 	m_userData.clear();
-	// m_wsaEvents - ì´ê±´ ê·¸ëƒ¥ ë¬´ì‹œí•´ë²„ë¦¬ê¸°.
+	// m_wsaEvents - ÀÌ°Ç ±×³É ¹«½ÃÇØ¹ö¸®±â.
 
-	// í ì»¨í…Œì´ë„ˆë„ ë¹„ì›Œì¤„ ê²¸ pop ì²˜ë¦¬í•©ë‹ˆë‹¤.
+	// Å¥ ÄÁÅ×ÀÌ³Êµµ ºñ¿öÁÙ °â pop Ã³¸®ÇÕ´Ï´Ù.
 	while( !m_acceptedSocket.empty( ) )
 	{
 		Heading::CClientSession* session = nullptr;
@@ -46,14 +46,14 @@ void EventManager::Dispose( )
 		delete currentSession;
 	}
 
-	// ë§ˆì§€ë§‰ ì²˜ë¦¬ ëë‚  ë•Œ ê¹Œì§€ ë‚˜ì˜¨ ëª¨ë“  ë¡œê·¸ë¥¼ ì†¡ì¶œ
+	// ¸¶Áö¸· Ã³¸® ³¡³¯ ¶§ ±îÁö ³ª¿Â ¸ğµç ·Î±×¸¦ ¼ÛÃâ
 	logFlush();
 }
 
 void EventManager::onAccept( SOCKET _sock )
 {
 	EventManager::get()->Log( Heading::formatf( "onAccept : %lld", _sock ) );
-	// ì§€ê¸ˆì€ ë‹¨ìˆœíˆ ì±„íŒ… ì„¸ì…˜ë§Œì„ ë§Œë“¤ì–´ì„œ ì €ì¥í•  ê²ƒ
+	// Áö±İÀº ´Ü¼øÈ÷ Ã¤ÆÃ ¼¼¼Ç¸¸À» ¸¸µé¾î¼­ ÀúÀåÇÒ °Í
 
 	if( WSA_MAXIMUM_WAIT_EVENTS > m_sessionSize )
 	{
@@ -120,7 +120,7 @@ void EventManager::onSelect( DWORD _eventIndex )
 			{
 				return;
 			}
-			Heading::packetBuff buff; // local bufferë‹ˆê¹Œ ì‚¬ë¼ì§ˆê±°ë¼ê³  ë³´ê³  í´ë¦¬ì–´ í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.
+			Heading::packetBuff buff; // local buffer´Ï±î »ç¶óÁú°Å¶ó°í º¸°í Å¬¸®¾î ÇÏÁö ¾Ê½À´Ï´Ù.
 			current->RecvData( OUT buff );
 
 			while( !buff.empty( ) )
@@ -128,7 +128,7 @@ void EventManager::onSelect( DWORD _eventIndex )
 				Heading::Header* packet = buff.front();
 				if( nullptr != packet )
 				{
-					if( current->CheckLive( ) ) // ë°›ëŠ” ì¤‘ ì„¸ì…˜ì´ ì£½ì€ê²Œ í™•ì¸ë˜ë©´ íë§Œ ë‚ ë¦¬ê²Œ Recv ì´ë²¤íŠ¸ ì²˜ë¦¬ë¥¼ ì•ˆí•©ë‹ˆë‹¤.
+					if( current->CheckLive( ) ) // ¹Ş´Â Áß ¼¼¼ÇÀÌ Á×Àº°Ô È®ÀÎµÇ¸é Å¥¸¸ ³¯¸®°Ô Recv ÀÌº¥Æ® Ã³¸®¸¦ ¾ÈÇÕ´Ï´Ù.
 					{
 						onRecv( current, packet );
 					}
@@ -139,7 +139,7 @@ void EventManager::onSelect( DWORD _eventIndex )
 				}
 				else
 				{
-					// null ì€ í¬ë˜ì‹œ ì‚¬ìœ ë¼ëŠ” ê³µìœ ë¥¼ ë”°ë¼ í¬ë˜ì‹œì‹œí‚µë‹ˆë‹¤.
+					// null Àº Å©·¡½Ã »çÀ¯¶ó´Â °øÀ¯¸¦ µû¶ó Å©·¡½Ã½ÃÅµ´Ï´Ù.
 					throw std::exception( "Receive Null Crash!!!" );
 				}
 			}
@@ -185,15 +185,15 @@ void EventManager::onRecv( IN Heading::CClientSession* _sessionInfo, IN Heading:
 	m_handler.Do_Process(_sessionInfo, _recvData);
 }
 
-// ì—¬ê¸°ëŠ” ë‚˜ì¤‘ì— onSend ë“¤ì–´ê°”ì„ ë•Œ ë°ì´í„°ë¥¼ ì•”í˜¸í™” í•˜ëŠ”ë° ì¨ì•¼í• ì§€ ê³ ë¯¼ í•´ ë³´ê¸°
-// ì´ íƒ€ì´ë°ì— í•  ì¼ì´ ë¬´ì—‡ì´ ìˆì„ê¹Œ...?
+// ¿©±â´Â ³ªÁß¿¡ onSend µé¾î°¬À» ¶§ µ¥ÀÌÅÍ¸¦ ¾ÏÈ£È­ ÇÏ´Âµ¥ ½á¾ßÇÒÁö °í¹Î ÇØ º¸±â
+// ÀÌ Å¸ÀÌ¹Ö¿¡ ÇÒ ÀÏÀÌ ¹«¾ùÀÌ ÀÖÀ»±î...?
 void EventManager::onSend( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _sendData )
 {
 
 }
 
-// ì´ì „ ë°ì´í„° ìš”ì²­ ë“¤ì–´ì˜´
-// í•´ë‹¹ ìœ ì € ì„¸ì…˜ ì „ì†¡íì— ëŒ€ê¸°ì‹œì¼œë†“ê¸°
+// ÀÌÀü µ¥ÀÌÅÍ ¿äÃ» µé¾î¿È
+// ÇØ´ç À¯Àú ¼¼¼Ç Àü¼ÛÅ¥¿¡ ´ë±â½ÃÄÑ³õ±â
 void EventManager::onRequestPrevious( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _sendData )
 {
 	Heading::PCK_CS_RequestPrevious* parse = static_cast<Heading::PCK_CS_RequestPrevious*>(_sendData);
@@ -212,29 +212,29 @@ void EventManager::Remove_Event( WSAEVENT _key )
 
 void EventManager::Recreate_EventInfo( )
 {
-	// ì´ ë™ì‘ì€ Sessionì´ ìœ ì§€ë˜ë©´ Recv ë˜ëŠ” ì¤‘ê°„ ë°ì´í„°ëŠ” Eventê°€ ì •ìƒì¸ Sessionì´ ì‚´ì•„ìˆëŠ” ë™ì•ˆ ìœ ì§€ë  ê²ƒìœ¼ë¡œ ê°€ì •í•˜ê³ 
-	// ëª¨ë“  ë°ì´í„°ë¥¼ ë¹„ìš°ê³  ì ‘ì†ì •ë³´ë¥¼ ë‚ ë¦° ë’¤ ì¬ë¡œê·¸ì¸ ìš”ì²­í•˜ëŠ” êµ¬ì¡°ì…ë‹ˆë‹¤.
-	// ì‹¤ì œ ì„œë¹„ìŠ¤ì—ì„  ì´ˆê¸°í™” ë¬¸ì œë¡œ ì´ëŸ° ë°©ì‹ì€ í˜ë“¤ì§€ë„
-	// ë°ì´í„°ë¥¼ í•œ ë²ˆ ë¹„ìš´ë‹¤ìŒ
+	// ÀÌ µ¿ÀÛÀº SessionÀÌ À¯ÁöµÇ¸é Recv µÇ´Â Áß°£ µ¥ÀÌÅÍ´Â Event°¡ Á¤»óÀÎ SessionÀÌ »ì¾ÆÀÖ´Â µ¿¾È À¯ÁöµÉ °ÍÀ¸·Î °¡Á¤ÇÏ°í
+	// ¸ğµç µ¥ÀÌÅÍ¸¦ ºñ¿ì°í Á¢¼ÓÁ¤º¸¸¦ ³¯¸° µÚ Àç·Î±×ÀÎ ¿äÃ»ÇÏ´Â ±¸Á¶ÀÔ´Ï´Ù.
+	// ½ÇÁ¦ ¼­ºñ½º¿¡¼± ÃÊ±âÈ­ ¹®Á¦·Î ÀÌ·± ¹æ½ÄÀº ÈûµéÁöµµ
+	// µ¥ÀÌÅÍ¸¦ ÇÑ ¹ø ºñ¿î´ÙÀ½
 	FlushSend();
 
-	// ê¸°ë³¸ ìœ ì €ë°ì´í„°ë¥¼ ë‹¤ ë‚ ë ¤ë²„ë¦¬ê³ 
+	// ±âº» À¯Àúµ¥ÀÌÅÍ¸¦ ´Ù ³¯·Á¹ö¸®°í
 	m_userData.clear();
 
 	//for( std::unordered_map<WSAEVENT, Heading::CClientSession*>::iterator iter = m_sessions.begin( ); m_sessions.end( ) != iter; ++iter )
 	for( auto iter = m_sessions.begin( ); m_sessions.end( ) != iter; ++iter )
 	{
 		Heading::CClientSession* currentSession = iter->second;
-		currentSession->enqueueSend( new Heading::PCK_SC_RequestReset(  ) ); // ë¬¸ì œê°€ ìˆëŠ” ì†Œì¼“ì€ ì „ì†¡ì¤‘ì— ì£½ëŠ”ê±¸ ê¸°ëŒ€í•˜ê³  ì¬ ë¡œê·¸ì¸ ìš”ì²­ì„ ë„£ìŠµë‹ˆë‹¤.
+		currentSession->enqueueSend( new Heading::PCK_SC_RequestReset(  ) ); // ¹®Á¦°¡ ÀÖ´Â ¼ÒÄÏÀº Àü¼ÛÁß¿¡ Á×´Â°É ±â´ëÇÏ°í Àç ·Î±×ÀÎ ¿äÃ»À» ³Ö½À´Ï´Ù.
 	}
 
-	m_wsaEvents.clear(); // í•œ ë²ˆ ë¹„ìš°ê³ 
+	m_wsaEvents.clear(); // ÇÑ ¹ø ºñ¿ì°í
 
 	//for( std::unordered_map<WSAEVENT, Heading::CClientSession*>::iterator iter = m_sessions.begin( ); m_sessions.end( ) != iter; ++iter )
 	for( auto iter = m_sessions.begin( ); m_sessions.end( ) != iter; ++iter )
 	{
 		WSAEVENT currentEvent = iter->first;
-		m_wsaEvents.add( currentEvent ); // ë¬¸ì œê°€ ìˆëŠ” ì†Œì¼“ì€ ì§€ì›Œì¡Œìœ¼ë¦¬ë¼ ê¸°ëŒ€í•˜ê³  ë‹¤ì‹œ ì¶”ê°€í•©ë‹ˆë‹¤.
+		m_wsaEvents.add( currentEvent ); // ¹®Á¦°¡ ÀÖ´Â ¼ÒÄÏÀº Áö¿öÁ³À¸¸®¶ó ±â´ëÇÏ°í ´Ù½Ã Ãß°¡ÇÕ´Ï´Ù.
 	}
 }
 
@@ -275,7 +275,7 @@ void EventManager::logFlush()
 	}
 }
 
-// ì ‘ì† í•œ ìœ ì €ì˜ ê³„ì •ì •ë³´ ì„¤ì •
+// Á¢¼Ó ÇÑ À¯ÀúÀÇ °èÁ¤Á¤º¸ ¼³Á¤
 void EventManager::onEnter( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _recvData )
 {
 	EventManager* mgr = EventManager::get();
@@ -288,7 +288,7 @@ void EventManager::onEnter( IN Heading::CClientSession* _sessionInfo, IN Heading
 	}
 }
 
-// ìœ ì € íƒˆì¶œ
+// À¯Àú Å»Ãâ
 void EventManager::onExit( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _recvData )
 {
 	EventManager* mgr = EventManager::get();
@@ -303,8 +303,8 @@ void EventManager::onExit( IN Heading::CClientSession* _sessionInfo, IN Heading:
 	}
 }
 
-// ì±„íŒ… ë°›ìŒ
-// ë°”ë¡œ ë‹¤ë¥¸ ìœ ì € ì„¸ì…˜ ì „ì†¡íì— ëŒ€ê¸°ì‹œì¼œë†“ê¸°
+// Ã¤ÆÃ ¹ŞÀ½
+// ¹Ù·Î ´Ù¸¥ À¯Àú ¼¼¼Ç Àü¼ÛÅ¥¿¡ ´ë±â½ÃÄÑ³õ±â
 void EventManager::onChatting( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _sendData )
 {
 	EventManager* mgr = EventManager::get();
@@ -322,8 +322,8 @@ void EventManager::onChatting( IN Heading::CClientSession* _sessionInfo, IN Head
 	}
 }
 
-// ê·“ì†ë§ ë°›ìŒ
-// ë°”ë¡œ ëŒ€ìƒ ìœ ì € ì„¸ì…˜ ì „ì†¡íì— ëŒ€ê¸°ì‹œì¼œë†“ê¸°
+// ±Ó¼Ó¸» ¹ŞÀ½
+// ¹Ù·Î ´ë»ó À¯Àú ¼¼¼Ç Àü¼ÛÅ¥¿¡ ´ë±â½ÃÄÑ³õ±â
 void EventManager::onWispering( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _sendData )
 {
 	EventManager* mgr = EventManager::get();
@@ -331,14 +331,14 @@ void EventManager::onWispering( IN Heading::CClientSession* _sessionInfo, IN Hea
 	if( nullptr != mgr )
 	{
 		Heading::PCK_CS_Wispering* parse = static_cast<Heading::PCK_CS_Wispering*>(_sendData);
-		std::string name( 13, '\0' );// ë‹‰ë„¤ì„ í’€ ì‚¬ì´ì¦ˆ 12
+		std::string name( 13, '\0' );// ´Ğ³×ÀÓ Ç® »çÀÌÁî 12
 		memcpy_s( name.data( ), 12, parse->buffer, 12 );
-		std::string chat( 101, '\0' ); // ì±„íŒ… í’€ ì‚¬ì´ì¦ˆ 100
+		std::string chat( 101, '\0' ); // Ã¤ÆÃ Ç® »çÀÌÁî 100
 		memcpy_s( chat.data( ), 100, ( ( char* ) parse->buffer ) + 12, 100 );
 		mgr->Log( Heading::formatf( "%s : %s - %s", mgr->m_userData.find( _sessionInfo->Get_Event( ) ).c_str( ), name.c_str( ), chat.c_str( ) ) );
 
 		WSAEVENT target = mgr->m_userData.find(name);
-		if( INVALID_HANDLE_VALUE != target ) // EVENT ê°ì²´ëŠ” Window Handle ì´ë¯€ë¡œ ë¹„ì •ìƒì¼ë• Windowsì— ì •ì˜ëœ INVALID HANDLE ì²˜ë¦¬ë¡œ ê°‘ë‹ˆë‹¤.
+		if( INVALID_HANDLE_VALUE != target ) // EVENT °´Ã¼´Â Window Handle ÀÌ¹Ç·Î ºñÁ¤»óÀÏ¶© Windows¿¡ Á¤ÀÇµÈ INVALID HANDLE Ã³¸®·Î °©´Ï´Ù.
 		{
 			//std::unordered_map<WSAEVENT, Heading::CClientSession*>::iterator targetUser;
 			auto targetUser = mgr->m_sessions.find( target );
@@ -368,7 +368,7 @@ WSAEVENT* EventManager::GetEventArray( )
 }
 
 EventManager::EventManager( E_PCK_CS_TYPE _type )
-	: m_handler( &(onNonDefinedCallback) ) // Nullì¼ë•Œ ì²˜ë¦¬ í•  í¬ì¸í„°
+	: m_handler( &(onNonDefinedCallback) ) // NullÀÏ¶§ Ã³¸® ÇÒ Æ÷ÀÎÅÍ
 {
 	switch( _type )
 	{

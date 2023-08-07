@@ -30,8 +30,8 @@ enum E_PCK_SC_TYPE
 	PCK_SC_MAX
 };
 
-// ì´ë²¤íŠ¸ ê´€ë¦¬ìž ì‚¬ì´ì¦ˆë¥¼ ë²—ì–´ë‚˜ì„œ ìž¬ì¡°ì • í•„ìš”.
-// ì „ì†¡ ìˆ˜ì‹  ê¸°ëŠ¥ê³¼ ì„¸ì…˜ ê´€ë¦¬ ê¸°ëŠ¥ì€ ì„œë²„ì—¡ìœ¼ë¡œ ì´ì „
+// ÀÌº¥Æ® °ü¸®ÀÚ »çÀÌÁî¸¦ ¹þ¾î³ª¼­ ÀçÁ¶Á¤ ÇÊ¿ä.
+// Àü¼Û ¼ö½Å ±â´É°ú ¼¼¼Ç °ü¸® ±â´ÉÀº ¼­¹ö¿¦À¸·Î ÀÌÀü
 class EventManager
 {
 public:
