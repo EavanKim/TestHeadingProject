@@ -69,7 +69,7 @@ WSAEVENT CChatUser::find( std::string _nickname )
 
 void CChatUser::clear( )
 {
-	// ì—­ì‹œ m_sessionsì˜ sessionì´ ì£¼ì¸ì´ë¯€ë¡œ ê·¸ëƒ¥ ë¹„ì›ë‹ˆë‹¤.
+	// ¿ª½Ã m_sessionsÀÇ sessionÀÌ ÁÖÀÎÀÌ¹Ç·Î ±×³É ºñ¿ó´Ï´Ù.
 	m_eventMap.clear();
 	m_nicknameMap.clear();
 }

@@ -36,7 +36,7 @@ int main()
 	_CrtSetReportMode( _CRT_WARN, _CRTDBG_MODE_DEBUG );
 	_CrtSetReportMode( _CRT_ERROR, _CRTDBG_MODE_DEBUG );
 	_CrtSetReportMode( _CRT_ASSERT, _CRTDBG_MODE_DEBUG );
-	//_CrtSetReportMode(_CRT_ERRCNT, _CRTDBG_MODE_DEBUG); // ì—ëŸ¬ ì¶œë ¥. CRT_ERRCNT ê°’ ë¬¸ì œë¡œ ë³´ì´ëŠ”ë° í™•ì¸ í•´ ë³´ê¸°.
+	//_CrtSetReportMode(_CRT_ERRCNT, _CRTDBG_MODE_DEBUG); // ¿¡·¯ Ãâ·Â. CRT_ERRCNT °ª ¹®Á¦·Î º¸ÀÌ´Âµ¥ È®ÀÎ ÇØ º¸±â.
 	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 	//_CrtMemDumpAllObjectsSince();
 #endif
