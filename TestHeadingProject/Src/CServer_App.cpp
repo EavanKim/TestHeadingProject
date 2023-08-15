@@ -28,6 +28,7 @@ void CServer_App::ListenBinding( )
 
 void CServer_App::SocketSelecting( )
 {
+	// IO 신호만 들어오는 위치
 	EventManager* evtMgr = EventManager::get();
 	if( nullptr != evtMgr )
 	{
@@ -39,7 +40,7 @@ void CServer_App::SocketSelecting( )
 			switch( Heading::WaitObjectCheck( result ) )
 			{
 			case Heading::E_WaitEvent_Result::E_Wait_Reset_EVENTS_ARRAY:
-				evtMgr->Recreate_EventInfo();
+				evtMgr->Recreate_EventInfo( );
 				break;
 			// 나머지 에러 극복도 구현 해 보기
 			case Heading::E_WaitEvent_Result::E_Wait_OK:

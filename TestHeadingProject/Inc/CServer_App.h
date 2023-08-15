@@ -17,5 +17,14 @@ private:
 	static WSADATA m_data;
 
 	static Heading::CAcceptThread* m_accept;
+
+	static concurrency::concurrent_unordered_map<WSAEVENT, Heading::CSimpleSocket*>							m_eventMap;
+
+	// 
+	static concurrency::concurrent_unordered_map<Heading::CSimpleSocket*, Heading::CEventBaseSession_v2*>	m_socketMap;
+
+	// 연결되었던 정보가 있는 맵
+	// 비동기로 틱을 처리하면서 Connection 체크를 실패하는 Session이 유지된 기간이 오래되면 삭제
+	static concurrency::concurrent_unordered_map<uint64_t, Heading::CEventBaseSession_v2*>					m_sessionMap;
 };
 

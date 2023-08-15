@@ -128,14 +128,14 @@ void EventManager::onSelect( DWORD _eventIndex )
 				Heading::Header* packet = buff.front();
 				if( nullptr != packet )
 				{
-					if( current->CheckLive( ) ) // 받는 중 세션이 죽은게 확인되면 큐만 날리게 Recv 이벤트 처리를 안합니다.
+					// 받는 중 세션이 죽었을 때 데이터를 죽이지 않기
+					if( current->CheckLive( ) )
 					{
 						onRecv( current, packet );
+						delete packet;
+
+						buff.pop();
 					}
-
-					delete packet;
-
-					buff.pop();
 				}
 				else
 				{
