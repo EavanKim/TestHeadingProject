@@ -41,6 +41,7 @@ public:
 	void Dispose();
 
 	static void onAccept( SOCKET _sock );
+	static void onAccept_v2( SOCKET _sock );
 	void SetAcceptSession();
 	void FlushSend();
 
@@ -78,5 +79,7 @@ private:
 	static concurrency::concurrent_queue<Heading::CClientSession*>	m_acceptedSocket;	// new Client
 
 	Heading::Array_WSAEvent											m_wsaEvents;		// Quick Remove Array
+
+	static concurrency::concurrent_queue<Heading::CSimpleSocket*>	m_newAccessList;
 };
 

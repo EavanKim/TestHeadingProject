@@ -14,15 +14,12 @@ void CServer_App::InitializeApplication( )
 
 void CServer_App::ListenBinding( )
 {
-	// Thread 만들면서 바로 등록.
 	Heading::AcceptThreadInfo* info = new Heading::AcceptThreadInfo();
 
 	info->port = 50000;
 	info->liveChecker = ServiceCheck;
 	info->onAccept = EventManager::onAccept;
 
-	// info는 안에서 잘 지우는 방향으로 처리.
-	// 지역성 있는 메모리는 스택 현황과 정리 상황에 따라 위험하므로 힙을 사용합니다.
 	m_accept = new Heading::CAcceptThread( info );
 }
 
@@ -42,18 +39,20 @@ void CServer_App::SocketSelecting( )
 			case Heading::E_WaitEvent_Result::E_Wait_Reset_EVENTS_ARRAY:
 				evtMgr->Recreate_EventInfo( );
 				break;
-			// 나머지 에러 극복도 구현 해 보기
 			case Heading::E_WaitEvent_Result::E_Wait_OK:
 				evtMgr->onSelect( result );
 				break;
 			case Heading::E_WaitEvent_Result::E_Wait_Delayed:
-				// 작업 대기중 로그이므로 지나갑니다.
 				break;
 			}
 		}
 
-		evtMgr->FlushSend(); // 전송 오류로 실패한 것 재시도 위치.
+		evtMgr->FlushSend();
 	}
+}
+
+void CServer_App::SocketSelecting_v2( )
+{
 }
 
 void CServer_App::EndProcessing( )

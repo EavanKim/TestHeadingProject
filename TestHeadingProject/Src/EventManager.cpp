@@ -65,6 +65,22 @@ void EventManager::onAccept( SOCKET _sock )
 	}
 }
 
+void EventManager::onAccept_v2( SOCKET _sock )
+{
+	EventManager::get()->Log( Heading::formatf( "onAccept : %lld", _sock ) );
+	// 지금은 단순히 채팅 세션만을 만들어서 저장할 것
+
+	if( WSA_MAXIMUM_WAIT_EVENTS > m_sessionSize )
+	{
+		m_newAccessList.push( new Heading::CSimpleSocket( _sock ) );
+		++m_sessionSize;
+	}
+	else
+	{
+		closesocket( _sock );
+	}
+}
+
 void EventManager::SetAcceptSession( )
 {
 	if( !m_acceptedSocket.empty( ) )
