@@ -30,13 +30,16 @@
     <ClCompile Include="Src\CChatUser.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="Src\ChatMgr.cpp">
+    <ClCompile Include="Src\AccessChecker.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="AccessChecker.cpp">
+    <ClCompile Include="Src\CChatSession_v2.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="CChatSession_v2.cpp">
+    <ClCompile Include="Src\CChatUser_v2.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\CServer_App_v2.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
@@ -59,13 +62,16 @@
     <ClInclude Include="Inc\CChatUser.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="Inc\ChatMgr.h">
+    <ClInclude Include="Inc\AccessChecker.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="AccessChecker.h">
+    <ClInclude Include="Inc\CChatSession_v2.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
-    <ClInclude Include="CChatSession_v2.h">
+    <ClInclude Include="Inc\CChatUser_v2.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Inc\CServer_App_v2.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

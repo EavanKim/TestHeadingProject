@@ -51,10 +51,6 @@ void CServer_App::SocketSelecting( )
 	}
 }
 
-void CServer_App::SocketSelecting_v2( )
-{
-}
-
 void CServer_App::EndProcessing( )
 {
 	EventManager* mgr = EventManager::get();

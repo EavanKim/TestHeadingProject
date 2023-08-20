@@ -38,5 +38,5 @@ void AccessChecker::onRecv( void* _simpleSocket, void* _accessChecker )
 	Heading::CSimpleSocket* socket = static_cast<Heading::CSimpleSocket*>(_simpleSocket);
 	AccessChecker* checker = static_cast<AccessChecker*>(_accessChecker);
 
-
+	
 }

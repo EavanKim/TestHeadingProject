@@ -36,7 +36,7 @@ int main()
 	_CrtSetReportMode( _CRT_WARN, _CRTDBG_MODE_DEBUG );
 	_CrtSetReportMode( _CRT_ERROR, _CRTDBG_MODE_DEBUG );
 	_CrtSetReportMode( _CRT_ASSERT, _CRTDBG_MODE_DEBUG );
-	//_CrtSetReportMode(_CRT_ERRCNT, _CRTDBG_MODE_DEBUG); // 에러 출력. CRT_ERRCNT 값 문제로 보이는데 확인 해 보기.
+	//_CrtSetReportMode(_CRT_ERRCNT, _CRTDBG_MODE_DEBUG);
 	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 	//_CrtMemDumpAllObjectsSince();
 #endif
@@ -63,7 +63,7 @@ int main()
 					   0,
 					   nullptr );
 
-		wprintf( L" LastError String : %s", message );
+		wprintf( L" LastError String : %hs", message );
 		LocalFree( message );
 	}
 

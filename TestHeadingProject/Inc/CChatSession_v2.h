@@ -5,7 +5,9 @@ public:
 	CChatSession_v2( Heading::CSimpleSocket* _sock );
 	~CChatSession_v2();
 
-private:
+	std::string getName();
 
+private:
+	std::string m_nickname = "";
 };
 

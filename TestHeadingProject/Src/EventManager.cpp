@@ -3,6 +3,7 @@
 EventManager*											EventManager::m_instance		= nullptr;
 uint16_t												EventManager::m_sessionSize		= 0;
 concurrency::concurrent_queue<Heading::CClientSession*>	EventManager::m_acceptedSocket;
+concurrency::concurrent_queue<Heading::CSimpleSocket*>	EventManager::m_newAccessList;
 
 void EventManager::init( )
 {
