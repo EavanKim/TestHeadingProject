@@ -137,4 +137,15 @@ bool CChatUser_v2::PreSelect( WSAEVENT* _ptr, int _count )
 
 void CChatUser_v2::clear( )
 {
+	m_nameToKeyMap.clear();
+	m_wsaEvents.clear();
+
+	for ( auto& iter : m_evtToKeyMap )
+	{
+		uint64_t key = iter.second;
+
+		delete m_sessionArray[key];
+		m_sessionArray[key] = nullptr;
+		m_freeSessionKey.push(key);
+	}
 }

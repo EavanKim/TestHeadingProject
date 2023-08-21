@@ -146,7 +146,6 @@
   <ItemGroup>
     <ClCompile Include="Src\CServer_App_v2.cpp" />
     <ClCompile Include="Src\CChatUser_v2.cpp" />
-    <ClCompile Include="Src\AccessChecker.cpp" />
     <ClCompile Include="Src\CChatSession_v2.cpp" />
     <ClCompile Include="Src\CChatUser.cpp" />
     <ClCompile Include="Src\CChatSession.cpp" />
@@ -155,7 +154,6 @@
     <ClCompile Include="TestHeadingProject.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Inc\AccessChecker.h" />
     <ClInclude Include="Inc\CChatSession_v2.h" />
     <ClInclude Include="Inc\CChatSession.h" />
     <ClInclude Include="Inc\CChatUser.h" />

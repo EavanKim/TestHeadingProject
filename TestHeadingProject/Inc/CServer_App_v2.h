@@ -15,9 +15,10 @@ public:
 private:
 	CServer_App_v2();
 	~CServer_App_v2();
-
-	Heading::CAcceptThread m_accepter;
+		
 	CChatUser_v2 m_sessions;
+
+	std::thread* m_acceptThread = nullptr;
 
 	static CServer_App_v2* m_instance;
 };

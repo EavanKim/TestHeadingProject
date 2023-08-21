@@ -2,8 +2,6 @@
 
 typedef std::unordered_map<WSAEVENT, uint64_t>			EventToKeyMap;
 typedef std::unordered_map<std::string, uint64_t>		NameToKeyMap;
-typedef std::unordered_map<CChatSession_v2*, uint64_t>	SessionToKeyMap;
-typedef std::unordered_map<uint64_t, CChatSession_v2*>	KeyToSessionMap;
 
 // Accepter 에서 User 정보를 받아 온 다음에 처리하는 위치이므로
 // nickName를 받았을 때만 초기화 해서 Select 시킵니다.
