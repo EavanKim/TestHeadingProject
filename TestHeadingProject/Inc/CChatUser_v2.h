@@ -19,11 +19,13 @@ public:
 	void Remove( uint64_t _sessionKey );
 	void Remove( CChatSession_v2* _session );
 
-	std::string				find( WSAEVENT _event );
-	WSAEVENT				find( std::string _nickname );
-	Heading::CSimpleSocket* find( uint64_t _key );
+	CChatSession_v2*	find( WSAEVENT _event );
+	CChatSession_v2*	find( std::string _nickname );
+	CChatSession_v2*	find( uint64_t _key );
 
-	bool PreSelect( WSAEVENT* _ptr, int _count );
+	bool PreSelect( WSAEVENT*& _ptr, int& _count );
+
+	void Update();
 
 	void clear();
 

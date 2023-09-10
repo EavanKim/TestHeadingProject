@@ -115,24 +115,62 @@ void CChatUser_v2::Remove( CChatSession_v2* _session )
 	}
 }
 
-std::string CChatUser_v2::find( WSAEVENT _event )
+CChatSession_v2* CChatUser_v2::find( WSAEVENT _event )
 {
-	return std::string( );
+	CChatSession_v2* result = nullptr;
+
+	EventToKeyMap::iterator target = m_evtToKeyMap.find(_event);
+	if ( m_evtToKeyMap.end() != target )
+	{
+		result = m_sessionArray[target->second];
+	}
+
+	return result;
 }
 
-WSAEVENT CChatUser_v2::find( std::string _nickname )
+CChatSession_v2* CChatUser_v2::find( std::string _nickname )
 {
-	return WSAEVENT( );
+	CChatSession_v2* result = nullptr;
+
+	NameToKeyMap::iterator target = m_nameToKeyMap.find(_nickname);
+	if ( m_nameToKeyMap.end() != target )
+	{
+		result = m_sessionArray[target->second];
+	}
+
+	return result;
 }
 
-Heading::CSimpleSocket* CChatUser_v2::find( uint64_t _key )
+CChatSession_v2* CChatUser_v2::find( uint64_t _key )
 {
-	return nullptr;
+	CChatSession_v2* result = nullptr;
+
+	if ( ( 0 < _key ) && ( _key < WSA_MAXIMUM_WAIT_EVENTS ) )
+	{
+		result = m_sessionArray[ _key ];
+	}
+
+	return result;
 }
 
-bool CChatUser_v2::PreSelect( WSAEVENT* _ptr, int _count )
+bool CChatUser_v2::PreSelect( WSAEVENT*& _ptr, int& _count )
 {
+	_count = m_wsaEvents.size();
+	if ( 0 != _count )
+	{
+		_ptr = *m_wsaEvents;
+		return true;
+	}
+
 	return false;
+}
+
+void CChatUser_v2::Update()
+{
+	for ( CChatSession_v2* session : m_sessionArray )
+	{
+		session->trySend();
+	}
 }
 
 void CChatUser_v2::clear( )

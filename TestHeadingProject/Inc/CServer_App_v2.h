@@ -11,6 +11,7 @@ public:
 
 	void AcceptSelect();
 	void SessionSelect();
+	void SendProcess();
 
 private:
 	CServer_App_v2();
