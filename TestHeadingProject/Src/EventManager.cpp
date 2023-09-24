@@ -264,7 +264,7 @@ void EventManager::onChatting( IN Heading::CClientSession* _sessionInfo, IN Head
 	{
 		Heading::CClientSession* currentSession = iter->second;
 
-		currentSession->enqueueSend( _sendData );
+		currentSession->trySend( _sendData );
 	}
 }
 
@@ -292,7 +292,7 @@ void EventManager::onWispering( IN Heading::CClientSession* _sessionInfo, IN Hea
 
 			memcpy_s(returnWisper.buffer, 12, Nick.data(), Nick.size() - 1);
 			memcpy_s(returnWisper.buffer, 12, chat.data(), chat.size() - 1);
-			currentSession->enqueueSend(&returnWisper);
+			currentSession->trySend(&returnWisper);
 		}
 	}
 }
@@ -325,7 +325,7 @@ void EventManager::Recreate_EventInfo( )
 	for( auto iter = m_sessions.begin( ); m_sessions.end( ) != iter; ++iter )
 	{
 		Heading::CClientSession* currentSession = iter->second;
-		currentSession->enqueueSend( new Heading::PCK_SC_RequestReset( ) ); // 문제가 있는 소켓은 전송중에 죽는걸 기대하고 재 로그인 요청을 넣습니다.
+		currentSession->trySend( new Heading::PCK_SC_RequestReset( ) ); // 문제가 있는 소켓은 전송중에 죽는걸 기대하고 재 로그인 요청을 넣습니다.
 	}
 
 	m_wsaEvents.clear(); // 한 번 비우고
