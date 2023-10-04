@@ -42,7 +42,7 @@ void CServer_App_Completion::Process_Accept()
 
 	SessionInfo* info = new SessionInfo; // 예제 코드는 이거 죄다 누수하고 있는데 관리자 만들기. 아마 Overlapped가 0번이라서 Overlapped 주소를 SessionInfo 형으로 받아 처리하는 것으로 추측
 	info->sock_ = newClient;
-	info->wsaBuf_.buf = info->storage_.allocate<CHAR>(MAXIMUM_PACKET_DATA_LENGTH);
+	info->wsaBuf_.buf = info->storage_.allocate<CHAR>(MAXIMUM_PACKET_DATA_LENGTH); // 세션 관련 데이터는 한 데 몰아놨다가 한 방에 날리려고 하니까 사이즈 고민 해 보기. (예상 서버 스팩 램에서 데이터 할당량 / 필요 최저한도 동시접속자수)
 	info->wsaBuf_.len = MAXIMUM_PACKET_DATA_LENGTH;
 
 	DWORD flags = 0;
