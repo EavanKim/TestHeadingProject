@@ -144,6 +144,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\CServer_App_Completion.cpp" />
     <ClCompile Include="Src\CServer_App_v2.cpp" />
     <ClCompile Include="Src\CChatUser_v2.cpp" />
     <ClCompile Include="Src\CChatSession_v2.cpp" />
@@ -154,6 +155,7 @@
     <ClCompile Include="TestHeadingProject.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Inc\CServer_App_Completion.h" />
     <ClInclude Include="Inc\CChatSession_v2.h" />
     <ClInclude Include="Inc\CChatSession.h" />
     <ClInclude Include="Inc\CChatUser.h" />

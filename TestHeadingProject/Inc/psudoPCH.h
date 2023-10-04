@@ -9,3 +9,4 @@
 #include "EventManager.h"
 #include "CServer_App.h"
 #include "CServer_App_v2.h"
+#include "CServer_App_Completion.h"
