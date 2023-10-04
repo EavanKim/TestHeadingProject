@@ -40,7 +40,7 @@ void CServer_App_Completion::Process_Accept()
 
 	CreateIoCompletionPort((HANDLE)newClient, m_completionHandle, newClient, 0);
 
-	SessionInfo* info = new SessionInfo; // 예제 코드는 이거 죄다 누수하고 있는데 관리자 만들기.
+	SessionInfo* info = new SessionInfo; // 예제 코드는 이거 죄다 누수하고 있는데 관리자 만들기. 아마 Overlapped가 0번이라서 Overlapped 주소를 SessionInfo 형으로 받아 처리하는 것으로 추측
 	info->sock_ = newClient;
 	info->wsaBuf_.buf = info->storage_.allocate<CHAR>(MAXIMUM_PACKET_DATA_LENGTH);
 	info->wsaBuf_.len = MAXIMUM_PACKET_DATA_LENGTH;
