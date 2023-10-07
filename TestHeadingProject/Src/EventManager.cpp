@@ -142,7 +142,7 @@ void EventManager::onSelect( DWORD _eventIndex )
 
 			while( !buff.empty( ) )
 			{
-				Heading::Header* packet = buff.front();
+				Heading::packetHeader_t* packet = buff.front();
 				if( nullptr != packet )
 				{
 					// 받는 중 세션이 죽었을 때 데이터를 죽이지 않기
@@ -197,7 +197,7 @@ void EventManager::onSelect( DWORD _eventIndex )
 	}
 }
 
-void EventManager::onRecv( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _recvData )
+void EventManager::onRecv( IN Heading::CClientSession* _sessionInfo, IN Heading::packetHeader_t* _recvData )
 {
 	switch( _recvData->type )
 	{
@@ -233,7 +233,7 @@ void EventManager::onRecv( IN Heading::CClientSession* _sessionInfo, IN Heading:
 
 // 여기는 나중에 onSend 들어갔을 때 데이터를 암호화 하는데 써야할지 고민 해 보기
 // 이 타이밍에 할 일이 무엇이 있을까...?
-void EventManager::onSend( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _sendData )
+void EventManager::onSend( IN Heading::CClientSession* _sessionInfo, IN Heading::packetHeader_t* _sendData )
 {
 
 }

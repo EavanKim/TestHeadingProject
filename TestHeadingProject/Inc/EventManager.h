@@ -46,8 +46,8 @@ public:
 	void FlushSend();
 
 	void onSelect( DWORD _eventIndex );
-	void onRecv( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _recvData );
-	void onSend( IN Heading::CClientSession* _sessionInfo, IN Heading::Header* _sendData );
+	void onRecv( IN Heading::CClientSession* _sessionInfo, IN Heading::packetHeader_t* _recvData );
+	void onSend( IN Heading::CClientSession* _sessionInfo, IN Heading::packetHeader_t* _sendData );
 	void onEnter( IN Heading::CClientSession* _sessionInfo, IN Heading::PCK_CS_Enter* _recvData );
 	void onExit( IN Heading::CClientSession* _sessionInfo );
 	void onChatting( IN Heading::CClientSession* _sessionInfo, IN Heading::PCK_CS_Chatting* _sendData );

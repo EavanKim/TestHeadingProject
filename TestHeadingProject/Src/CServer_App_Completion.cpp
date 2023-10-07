@@ -48,8 +48,10 @@ void CServer_App_Completion::Process_Accept()
 	DWORD flags = 0;
 	DWORD recvBytes = 0;
 	DWORD retVal = WSARecv(newClient, &info->wsaBuf_, 1, &recvBytes, &flags, &info->overlapped_, NULL);
-	// 여기도 에러 관련 작업 추가하기.
-	// 이렇게 연결해놓고 GetMessage Pump 처럼 GetQueuedCompletionStatus 를 써서 하나씩 꺼내서 처리하는 구조
+	if ( SOCKET_ERROR == retVal )
+	{
+		
+	}
 }
 
 CServer_App_Completion::CServer_App_Completion()
