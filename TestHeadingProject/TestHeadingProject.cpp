@@ -25,7 +25,7 @@ volatile sig_atomic_t exitSig;
 void signal_handler(int sig)
 {
 	signal(sig, signal_handler);
-	//CServer_App::ServerStop();
+
 	exitSig= 1;
 }
 
@@ -47,61 +47,21 @@ int main()
 	_CrtMemDumpAllObjectsSince( NULL );
 #endif
 
-	//{
-	//	Heading::CSessionStorage_v2* testStorage = new Heading::CSessionStorage_v2;
+	Heading::IHeadingSelecter* select = new Heading::CDefaultSelecter();
 
+	if ( (nullptr == select) && (select->IsReady()) )
+		return -1;
 
-	//	for ( int count = 0; 100000 > count; ++count )
-	//	{
-	//		char* gettestbuff = testStorage->getBuffer();
+	while ( select->IsLive() )
+	{
+		select->Update();
+	}
 
-	//		if ( NULL != gettestbuff )
-	//		{
-	//			for ( int seek = 0; MAXIMUM_PACKET_DATA_LENGTH > seek; ++seek )
-	//				gettestbuff[seek] = count % 10;
+	// 최종 정리
+	select->Dispose();
+	delete select;
+	select = nullptr;
 
-	//			testStorage->commitBuffer(MAXIMUM_PACKET_DATA_LENGTH);
-	//		}
-	//		else
-	//		{
-	//			printf("Buffer Out!!!");
-	//			break;
-	//		}
-	//	}
-
-	//	delete testStorage;
-	//	testStorage = nullptr;
-	//}
-
-	//CServer_App::InitializeApplication( );
-
-	//CServer_App::ListenBinding( );
-
-	//try
-	//{
-	//	while( CServer_App::ServiceCheck( ) )
-	//	{
-	//		EventManager::get( )->logFlush( );
-	//		CServer_App::SocketSelecting( );
-	//	}
-	//}
-	//catch( ... )
-	//{
-	//	TCHAR* message = nullptr;
-	//	FormatMessage( FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-	//				   nullptr,
-	//				   GetLastError( ),
-	//				   MAKELANGID( LANG_NEUTRAL, SUBLANG_DEFAULT ),
-	//				   ( TCHAR* ) &message,
-	//				   0,
-	//				   nullptr );
-
-	//	wprintf( L" LastError String : %hs", message );
-	//	LocalFree( message );
-	//}
-
-	//CServer_App::ServerStop();
-	//CServer_App::EndProcessing( );
 #if _WIN32
 #ifdef _DEBUG
 	_CrtDumpMemoryLeaks( );
